@@ -37,6 +37,30 @@ function getTodayDate() {
   return new Date().toISOString().split('T')[0]
 }
 
+function getStudentNameError(studentName: string) {
+  if (!studentName || /^[A-Za-z ]+$/.test(studentName)) {
+    return ''
+  }
+
+  return 'Student Name can only contain English letters and spaces.'
+}
+
+function getStudentIdError(studentId: string) {
+  if (!studentId || /^[0-9]+$/.test(studentId)) {
+    return ''
+  }
+
+  return 'Student ID can only contain numbers.'
+}
+
+function getPurposeError(purpose: string) {
+  if (!purpose || /^[A-Za-z0-9 .,!?'"():;&/\-\r\n]+$/.test(purpose)) {
+    return ''
+  }
+
+  return 'Purpose can only contain English letters, numbers, spaces, and basic punctuation.'
+}
+
 export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [form, setForm] = useState<BookingFormValues>(emptyForm)
   const [errorMessage, setErrorMessage] = useState('')
@@ -58,6 +82,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     () => resources.find((resource) => resource.id === form.resourceId),
     [form.resourceId],
   )
+
+  const studentNameError = getStudentNameError(form.studentName)
+  const studentIdError = getStudentIdError(form.studentId)
+  const purposeError = getPurposeError(form.purpose)
 
   function updateField(field: keyof BookingFormValues, value: string) {
     setForm((currentForm) => ({
@@ -107,6 +135,15 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     if (requiredFieldError) {
       setErrorMessage(requiredFieldError)
+      setSuccessMessage('')
+      setConfirmedBooking(null)
+      return
+    }
+
+    if (studentNameError || studentIdError || purposeError) {
+      setErrorMessage(
+        'Please use English input only. Student Name must contain letters only, Student ID must contain numbers only, and Purpose can only use English letters, numbers, spaces, and basic punctuation.',
+      )
       setSuccessMessage('')
       setConfirmedBooking(null)
       return
@@ -175,6 +212,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
               placeholder="Alex Tan"
             />
+            {studentNameError && (
+              <p className="text-sm font-medium text-red-600">
+                {studentNameError}
+              </p>
+            )}
           </label>
 
           <label className="space-y-2">
@@ -186,8 +228,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               value={form.studentId}
               onChange={(event) => updateField('studentId', event.target.value)}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
-              placeholder="S1234567A"
+              placeholder="123456"
             />
+            {studentIdError && (
+              <p className="text-sm font-medium text-red-600">
+                {studentIdError}
+              </p>
+            )}
           </label>
         </div>
 
@@ -263,6 +310,9 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             className="min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
             placeholder="Briefly explain why you need this resource."
           />
+          {purposeError && (
+            <p className="text-sm font-medium text-red-600">{purposeError}</p>
+          )}
         </label>
 
         {errorMessage && (
