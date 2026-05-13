@@ -237,13 +237,13 @@ export function MyBookings() {
   return (
     <main className="space-y-10">
       <section className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
           My Bookings
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
           Your Bookings
         </h1>
-        <p className="max-w-2xl text-base leading-7 text-slate-600">
+        <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-400">
           Review your booking requests, edit active bookings, or cancel a
           booking you no longer need.
         </p>
@@ -259,10 +259,10 @@ export function MyBookings() {
               stopEditing()
               setMessage('')
             }}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
               selectedFilter === filter
-                ? 'bg-blue-700 text-white shadow-sm'
-                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-950'
+                ? 'bg-blue-700 text-white shadow-sm dark:bg-blue-600'
+                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-950 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 dark:hover:bg-slate-800 dark:hover:text-white'
             }`}
           >
             {filter} ({bookingCounts[filter]})
@@ -271,7 +271,7 @@ export function MyBookings() {
       </section>
 
       {message && (
-        <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+        <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
           {message}
         </p>
       )}
@@ -307,19 +307,19 @@ export function MyBookings() {
                 {isEditing && (
                   <form
                     onSubmit={handleSaveEdit}
-                    className="space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm sm:p-6"
+                    className="space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm transition-colors duration-300 sm:p-6 dark:border-blue-900 dark:bg-slate-900"
                   >
                     <div>
-                      <h2 className="text-lg font-semibold text-slate-950">
+                      <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                         Edit Booking
                       </h2>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                         Student: {booking.studentName} ({booking.studentId})
                       </p>
                     </div>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         Resource
                       </span>
                       <select
@@ -327,7 +327,7 @@ export function MyBookings() {
                         onChange={(event) =>
                           updateEditField('resourceId', event.target.value)
                         }
-                        className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                        className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                       >
                         <option value="">Choose a resource</option>
                         {resources.map((resource) => (
@@ -340,7 +340,7 @@ export function MyBookings() {
 
                     <div className="grid gap-5 md:grid-cols-3">
                       <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Date
                         </span>
                         <input
@@ -349,12 +349,12 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('date', event.target.value)
                           }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                         />
                       </label>
 
                       <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Start Time
                         </span>
                         <input
@@ -363,12 +363,12 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('startTime', event.target.value)
                           }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                         />
                       </label>
 
                       <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           End Time
                         </span>
                         <input
@@ -377,13 +377,13 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('endTime', event.target.value)
                           }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                         />
                       </label>
                     </div>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                         Purpose
                       </span>
                       <textarea
@@ -391,12 +391,12 @@ export function MyBookings() {
                         onChange={(event) =>
                           updateEditField('purpose', event.target.value)
                         }
-                        className="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                        className="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                       />
                     </label>
 
                     {errorMessage && (
-                      <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                      <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                         {errorMessage}
                       </p>
                     )}
@@ -404,14 +404,14 @@ export function MyBookings() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="submit"
-                        className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
                       >
                         Save Changes
                       </button>
                       <button
                         type="button"
                         onClick={stopEditing}
-                        className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
                       >
                         Close
                       </button>

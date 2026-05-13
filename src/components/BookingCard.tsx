@@ -11,9 +11,11 @@ type BookingCardProps = {
 }
 
 const statusStyles = {
-  Active: 'bg-blue-50 text-blue-700 ring-blue-100',
-  Cancelled: 'bg-red-50 text-red-700 ring-red-100',
-  Completed: 'bg-green-50 text-green-700 ring-green-100',
+  Active: 'bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-900',
+  Cancelled:
+    'bg-red-50 text-red-700 ring-red-100 dark:bg-red-950 dark:text-red-300 dark:ring-red-900',
+  Completed:
+    'bg-green-50 text-green-700 ring-green-100 dark:bg-green-950 dark:text-green-300 dark:ring-green-900',
 }
 
 export function BookingCard({
@@ -26,13 +28,13 @@ export function BookingCard({
   onEdit,
 }: BookingCardProps) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950">
+          <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
             {resourceName}
           </h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
             {booking.date}, {booking.startTime} - {booking.endTime}
           </p>
         </div>
@@ -44,17 +46,23 @@ export function BookingCard({
         </span>
       </div>
 
-      <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 sm:grid-cols-2">
+      <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
         <div>
-          <dt className="font-semibold text-slate-900">Student</dt>
+          <dt className="font-semibold text-slate-900 dark:text-slate-100">
+            Student
+          </dt>
           <dd>{booking.studentName}</dd>
         </div>
         <div>
-          <dt className="font-semibold text-slate-900">Status</dt>
+          <dt className="font-semibold text-slate-900 dark:text-slate-100">
+            Status
+          </dt>
           <dd>{displayStatus}</dd>
         </div>
         <div className="sm:col-span-2">
-          <dt className="font-semibold text-slate-900">Purpose</dt>
+          <dt className="font-semibold text-slate-900 dark:text-slate-100">
+            Purpose
+          </dt>
           <dd className="leading-6">{booking.purpose}</dd>
         </div>
       </dl>
@@ -64,14 +72,14 @@ export function BookingCard({
           <button
             type="button"
             onClick={() => onEdit(booking)}
-            className="min-h-10 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            className="min-h-10 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => onCancel(booking.id)}
-            className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200"
+            className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-900"
           >
             Cancel Booking
           </button>

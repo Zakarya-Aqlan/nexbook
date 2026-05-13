@@ -196,11 +196,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+        className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 sm:p-6 dark:border-slate-800 dark:bg-slate-900"
       >
         <div className="grid gap-5 md:grid-cols-2">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Student Name
             </span>
             <input
@@ -209,29 +209,29 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               onChange={(event) =>
                 updateField('studentName', event.target.value)
               }
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
               placeholder="Alex Tan"
             />
             {studentNameError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                 {studentNameError}
               </p>
             )}
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Student ID
             </span>
             <input
               type="text"
               value={form.studentId}
               onChange={(event) => updateField('studentId', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
               placeholder="123456"
             />
             {studentIdError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                 {studentIdError}
               </p>
             )}
@@ -239,11 +239,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </div>
 
         <label className="space-y-2">
-          <span className="text-sm font-medium text-slate-700">Resource</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Resource
+          </span>
           <select
             value={form.resourceId}
             onChange={(event) => updateField('resourceId', event.target.value)}
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
           >
             <option value="">Choose a resource</option>
             {resources.map((resource) => (
@@ -255,11 +257,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </label>
 
         {selectedResource && (
-          <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-950 ring-1 ring-blue-100">
+          <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-950 ring-1 ring-blue-100 transition-colors duration-300 dark:bg-blue-950 dark:text-blue-100 dark:ring-blue-900">
             <p className="font-semibold">{selectedResource.name}</p>
             <p className="mt-1 leading-6">
               {selectedResource.location}
-              <span className="mx-2 text-blue-300">|</span>
+              <span className="mx-2 text-blue-300 dark:text-blue-700">|</span>
               Capacity {selectedResource.capacity}
             </p>
             <p>
@@ -271,109 +273,125 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
         <div className="grid gap-5 md:grid-cols-3">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700">Date</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Date
+            </span>
             <input
               type="date"
               min={getTodayDate()}
               value={form.date}
               onChange={(event) => updateField('date', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             />
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Start Time
             </span>
             <input
               type="time"
               value={form.startTime}
               onChange={(event) => updateField('startTime', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             />
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700">End Time</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              End Time
+            </span>
             <input
               type="time"
               value={form.endTime}
               onChange={(event) => updateField('endTime', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             />
           </label>
         </div>
 
         <label className="space-y-2">
-          <span className="text-sm font-medium text-slate-700">Purpose</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Purpose
+          </span>
           <textarea
             value={form.purpose}
             onChange={(event) => updateField('purpose', event.target.value)}
-            className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+            className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none transition-colors duration-300 placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             placeholder="Briefly explain why you need this resource."
           />
           {purposeError && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
               {purposeError}
             </p>
           )}
         </label>
 
         {errorMessage && (
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
             {errorMessage}
           </p>
         )}
 
         {successMessage && (
-          <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+          <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
             {successMessage}
           </p>
         )}
 
         <button
           type="submit"
-          className="min-h-11 w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 md:w-auto"
+          className="min-h-11 w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 md:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
         >
           Submit Booking
         </button>
       </form>
 
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <h2 className="text-xl font-semibold text-slate-950">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
           Booking Summary
         </h2>
 
         {confirmedBooking && selectedResource ? (
-          <dl className="mt-4 space-y-3 text-sm text-slate-600">
+          <dl className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-400">
             <div>
-              <dt className="font-semibold text-slate-900">Resource</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                Resource
+              </dt>
               <dd>{selectedResource.name}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-900">Student</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                Student
+              </dt>
               <dd>
                 {confirmedBooking.studentName} ({confirmedBooking.studentId})
               </dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-900">Date and Time</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                Date and Time
+              </dt>
               <dd>
                 {confirmedBooking.date}, {confirmedBooking.startTime} -{' '}
                 {confirmedBooking.endTime}
               </dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-900">Purpose</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                Purpose
+              </dt>
               <dd>{confirmedBooking.purpose}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-900">Status</dt>
+              <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                Status
+              </dt>
               <dd className="capitalize">{confirmedBooking.status}</dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Submit a valid booking to see the confirmation details here.
           </p>
         )}
