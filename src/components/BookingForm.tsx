@@ -66,7 +66,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
-
   useEffect(() => {
     const resourceExists = resources.some(
       (resource) => resource.id === initialResourceId,
