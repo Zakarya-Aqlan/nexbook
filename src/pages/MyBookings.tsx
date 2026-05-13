@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react'
 import { BookingCard } from '../components/BookingCard'
 import { EmptyState } from '../components/EmptyState'
+import { TimeRangeSelect } from '../components/TimeRangeSelect'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
+  getDurationError,
   getOpeningHoursError,
   getPastDateError,
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
+import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -216,6 +219,7 @@ export function MyBookings() {
     const validationError =
       getPastDateError(updatedBooking.date) ||
       getTimeRangeError(updatedBooking.startTime, updatedBooking.endTime) ||
+      getDurationError(updatedBooking.startTime, updatedBooking.endTime) ||
       getOpeningHoursError(
         selectedResource,
         updatedBooking.startTime,
@@ -324,9 +328,16 @@ export function MyBookings() {
                       </span>
                       <select
                         value={editForm.resourceId}
-                        onChange={(event) =>
-                          updateEditField('resourceId', event.target.value)
-                        }
+                        onChange={(event) => {
+                          setEditForm((currentForm) => ({
+                            ...currentForm,
+                            resourceId: event.target.value,
+                            startTime: '',
+                            endTime: '',
+                          }))
+                          setMessage('')
+                          setErrorMessage('')
+                        }}
                         className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                       >
                         <option value="">Choose a resource</option>
@@ -345,6 +356,7 @@ export function MyBookings() {
                         </span>
                         <input
                           type="date"
+                          min={getTodayDate()}
                           value={editForm.date}
                           onChange={(event) =>
                             updateEditField('date', event.target.value)
@@ -353,34 +365,24 @@ export function MyBookings() {
                         />
                       </label>
 
-                      <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Start Time
-                        </span>
-                        <input
-                          type="time"
-                          value={editForm.startTime}
-                          onChange={(event) =>
-                            updateEditField('startTime', event.target.value)
-                          }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                        />
-                      </label>
-
-                      <label className="space-y-2">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          End Time
-                        </span>
-                        <input
-                          type="time"
-                          value={editForm.endTime}
-                          onChange={(event) =>
-                            updateEditField('endTime', event.target.value)
-                          }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                        />
-                      </label>
+                      <TimeRangeSelect
+                        resource={selectedResource}
+                        startTime={editForm.startTime}
+                        endTime={editForm.endTime}
+                        onChangeStartTime={(time) =>
+                          updateEditField('startTime', time)
+                        }
+                        onChangeEndTime={(time) =>
+                          updateEditField('endTime', time)
+                        }
+                      />
                     </div>
+
+                    {!selectedResource && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Choose a resource first to enable Start Time and End Time.
+                      </p>
+                    )}
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
