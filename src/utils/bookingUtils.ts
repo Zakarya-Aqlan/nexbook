@@ -70,3 +70,20 @@ export function hasBookingConflict(
 
   return null
 }
+
+export function getDurationError(
+  startTime: string,
+  endTime: string,
+): string | null {
+  const duration = timeToMinutes(endTime) - timeToMinutes(startTime)
+
+  if (duration < 30) {
+    return 'Booking must be at least 30 minutes long.'
+  }
+
+  if (duration > 180) {
+    return 'Booking cannot be longer than 3 hours.'
+  }
+
+  return null
+}
