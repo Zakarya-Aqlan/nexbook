@@ -77,8 +77,8 @@ export function getDurationError(
 ): string | null {
   const duration = timeToMinutes(endTime) - timeToMinutes(startTime)
 
-  if (duration < 30) {
-    return 'Booking must be at least 30 minutes long.'
+  if (duration < 60) {
+    return 'Booking must be at least 1 hour long.'
   }
 
   if (duration > 180) {

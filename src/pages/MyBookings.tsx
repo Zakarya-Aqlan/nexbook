@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BookingCard } from '../components/BookingCard'
 import { EmptyState } from '../components/EmptyState'
-import { TimeRangeSelect } from '../components/TimeRangeSelect'
+import { AvailabilitySlots } from '../components/AvailabilitySlots'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
@@ -349,8 +349,8 @@ export function MyBookings() {
                       </select>
                     </label>
 
-                    <div className="grid gap-5 md:grid-cols-3">
-                      <label className="space-y-2">
+                    <section className="mt-8 space-y-4 border-t border-blue-200 pt-6 dark:border-slate-800">
+                      <label className="block space-y-2">
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                           Date
                         </span>
@@ -361,28 +361,26 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('date', event.target.value)
                           }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 sm:max-w-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
                         />
                       </label>
-
-                      <TimeRangeSelect
-                        resource={selectedResource}
-                        startTime={editForm.startTime}
-                        endTime={editForm.endTime}
-                        onChangeStartTime={(time) =>
-                          updateEditField('startTime', time)
-                        }
-                        onChangeEndTime={(time) =>
-                          updateEditField('endTime', time)
-                        }
-                      />
-                    </div>
-
-                    {!selectedResource && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Choose a resource first to enable Start Time and End Time.
+                      <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                        Pick a new date, then select an available slot. This
+                        booking will not block its own current time.
                       </p>
-                    )}
+
+                      <AvailabilitySlots
+                        resource={selectedResource}
+                        date={editForm.date}
+                        excludeBookingId={editingBookingId}
+                        selectedStartTime={editForm.startTime}
+                        selectedEndTime={editForm.endTime}
+                        onSelectSlot={(startTime, endTime) => {
+                          updateEditField('startTime', startTime)
+                          updateEditField('endTime', endTime)
+                        }}
+                      />
+                    </section>
 
                     <label className="space-y-2">
                       <span className="text-sm font-medium text-slate-700 dark:text-slate-300">

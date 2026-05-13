@@ -10,7 +10,7 @@ import {
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
-import { TimeRangeSelect } from './TimeRangeSelect'
+import { AvailabilitySlots } from './AvailabilitySlots'
 
 type BookingFormProps = {
   initialResourceId?: string
@@ -279,8 +279,8 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           </div>
         )}
 
-        <div className="grid gap-5 md:grid-cols-3">
-          <label className="space-y-2">
+        <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 dark:border-slate-800">
+          <label className="block space-y-2">
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               Date
             </span>
@@ -289,24 +289,25 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               min={getTodayDate()}
               value={form.date}
               onChange={(event) => updateField('date', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 sm:max-w-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             />
           </label>
-
-          <TimeRangeSelect
-            resource={selectedResource}
-            startTime={form.startTime}
-            endTime={form.endTime}
-            onChangeStartTime={(time) => updateField('startTime', time)}
-            onChangeEndTime={(time) => updateField('endTime', time)}
-          />
-        </div>
-
-        {!selectedResource && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Choose a resource first to enable Start Time and End Time.
+          <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+            Select a date first, then choose one of the available time slots
+            below.
           </p>
-        )}
+
+          <AvailabilitySlots
+            resource={selectedResource}
+            date={form.date}
+            selectedStartTime={form.startTime}
+            selectedEndTime={form.endTime}
+            onSelectSlot={(startTime, endTime) => {
+              updateField('startTime', startTime)
+              updateField('endTime', endTime)
+            }}
+          />
+        </section>
 
         <label className="space-y-2">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
