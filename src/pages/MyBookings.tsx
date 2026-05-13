@@ -235,11 +235,15 @@ export function MyBookings() {
   }
 
   return (
-    <main className="space-y-8">
+    <main className="space-y-10">
       <section className="space-y-3">
-        <p className="text-sm font-medium text-blue-700">My Bookings</p>
-        <h1 className="text-3xl font-bold">Your Bookings</h1>
-        <p className="max-w-2xl text-slate-600">
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+          My Bookings
+        </p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          Your Bookings
+        </h1>
+        <p className="max-w-2xl text-base leading-7 text-slate-600">
           Review your booking requests, edit active bookings, or cancel a
           booking you no longer need.
         </p>
@@ -257,8 +261,8 @@ export function MyBookings() {
             }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               selectedFilter === filter
-                ? 'bg-blue-700 text-white'
-                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'
+                ? 'bg-blue-700 text-white shadow-sm'
+                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-950'
             }`}
           >
             {filter} ({bookingCounts[filter]})
@@ -303,7 +307,7 @@ export function MyBookings() {
                 {isEditing && (
                   <form
                     onSubmit={handleSaveEdit}
-                    className="space-y-5 rounded-xl border border-blue-200 bg-blue-50 p-5"
+                    className="space-y-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm sm:p-6"
                   >
                     <div>
                       <h2 className="text-lg font-semibold text-slate-950">
@@ -323,7 +327,7 @@ export function MyBookings() {
                         onChange={(event) =>
                           updateEditField('resourceId', event.target.value)
                         }
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                        className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                       >
                         <option value="">Choose a resource</option>
                         {resources.map((resource) => (
@@ -345,7 +349,7 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('date', event.target.value)
                           }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                         />
                       </label>
 
@@ -359,7 +363,7 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('startTime', event.target.value)
                           }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                         />
                       </label>
 
@@ -373,7 +377,7 @@ export function MyBookings() {
                           onChange={(event) =>
                             updateEditField('endTime', event.target.value)
                           }
-                          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                         />
                       </label>
                     </div>
@@ -387,7 +391,7 @@ export function MyBookings() {
                         onChange={(event) =>
                           updateEditField('purpose', event.target.value)
                         }
-                        className="min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                        className="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 outline-none transition focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                       />
                     </label>
 
@@ -400,14 +404,14 @@ export function MyBookings() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="submit"
-                        className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800"
+                        className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200"
                       >
                         Save Changes
                       </button>
                       <button
                         type="button"
                         onClick={stopEditing}
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-white"
+                        className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200"
                       >
                         Close
                       </button>
