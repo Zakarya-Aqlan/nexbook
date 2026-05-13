@@ -39,6 +39,16 @@ function getBookingGroup(booking: Booking): BookingFilter {
   return 'Active'
 }
 
+function getDisplayStatus(booking: Booking) {
+  const bookingGroup = getBookingGroup(booking)
+
+  if (bookingGroup === 'Cancelled' || bookingGroup === 'Completed') {
+    return bookingGroup
+  }
+
+  return booking.status === 'approved' ? 'Approved' : 'Pending'
+}
+
 function getResourceName(resourceId: string) {
   return (
     resources.find((resource) => resource.id === resourceId)?.name ??
@@ -284,6 +294,7 @@ export function MyBookings() {
                   booking={booking}
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
+                  displayStatus={getDisplayStatus(booking)}
                   canManage={bookingGroup === 'Active'}
                   onCancel={handleCancelBooking}
                   onEdit={startEditing}

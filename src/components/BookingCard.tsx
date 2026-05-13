@@ -4,6 +4,7 @@ type BookingCardProps = {
   booking: Booking
   resourceName: string
   groupLabel: 'Active' | 'Cancelled' | 'Completed'
+  displayStatus: string
   canManage: boolean
   onCancel: (bookingId: string) => void
   onEdit: (booking: Booking) => void
@@ -19,6 +20,7 @@ export function BookingCard({
   booking,
   resourceName,
   groupLabel,
+  displayStatus,
   canManage,
   onCancel,
   onEdit,
@@ -49,7 +51,7 @@ export function BookingCard({
         </div>
         <div>
           <dt className="font-medium text-slate-900">Status</dt>
-          <dd className="capitalize">{booking.status}</dd>
+          <dd>{displayStatus}</dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="font-medium text-slate-900">Purpose</dt>
