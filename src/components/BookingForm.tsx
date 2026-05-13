@@ -213,7 +213,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               placeholder="Alex Tan"
             />
             {studentNameError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
+              <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                 {studentNameError}
               </p>
             )}
@@ -231,7 +231,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               placeholder="123456"
             />
             {studentIdError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
+              <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                 {studentIdError}
               </p>
             )}
@@ -328,13 +328,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </label>
 
         {errorMessage && (
-          <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
+          <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
             {errorMessage}
           </p>
         )}
 
         {successMessage && (
-          <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
+          <p className="rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
             {successMessage}
           </p>
         )}
@@ -353,6 +353,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </h2>
 
         {confirmedBooking && selectedResource ? (
+          <>
+          <p className="mt-4 rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
+            Booking confirmed successfully!
+          </p>
           <dl className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-400">
             <div>
               <dt className="font-semibold text-slate-900 dark:text-slate-100">
@@ -390,6 +394,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               <dd className="capitalize">{confirmedBooking.status}</dd>
             </div>
           </dl>
+          </>
         ) : (
           <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Submit a valid booking to see the confirmation details here.

@@ -271,7 +271,7 @@ export function MyBookings() {
       </section>
 
       {message && (
-        <p className="rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
+        <p className="rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 dark:bg-green-950 dark:text-green-300">
           {message}
         </p>
       )}
@@ -396,7 +396,7 @@ export function MyBookings() {
                     </label>
 
                     {errorMessage && (
-                      <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
+                      <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 dark:bg-red-950 dark:text-red-300">
                         {errorMessage}
                       </p>
                     )}

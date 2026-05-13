@@ -1,8 +1,15 @@
 import { Link } from 'react-router-dom'
-import type { Resource } from '../types'
+import type { Resource, ResourceType } from '../types'
 
 type ResourceCardProps = {
   resource: Resource
+}
+
+const typeBadgeStyles: Record<ResourceType, string> = {
+  room: 'bg-purple-50 text-purple-700 ring-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:ring-purple-900',
+  lab: 'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-950 dark:text-indigo-300 dark:ring-indigo-900',
+  equipment: 'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-900',
+  sports: 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-950 dark:text-green-300 dark:ring-green-900',
 }
 
 export function ResourceCard({ resource }: ResourceCardProps) {
@@ -17,7 +24,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             {resource.location}
           </p>
         </div>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700 ring-1 ring-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-900">
+        <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 ${typeBadgeStyles[resource.type]}`}>
           {resource.type}
         </span>
       </div>
