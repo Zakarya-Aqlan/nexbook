@@ -279,7 +279,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           </div>
         )}
 
-        <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 dark:border-slate-800">
+        <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 transition-colors duration-300 ease-in-out dark:border-slate-800">
           <label className="block space-y-2">
             <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Date
