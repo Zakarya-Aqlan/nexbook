@@ -21,6 +21,14 @@ type AvailabilitySlotOptions = {
   now?: Date
 }
 
+type ResourceAvailabilityOptions = {
+  resource: Resource
+  date: string
+  duration: number
+  bookings: Booking[]
+  excludeBookingId?: string
+}
+
 export function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(':').map(Number)
   return hours * 60 + minutes
@@ -106,18 +114,35 @@ export function getAvailabilitySlots({
   return slots
 }
 
-export function hasAvailableSlotForResourceToday(
-  resource: Resource,
-  bookings: Booking[],
-  excludeBookingId?: string,
-) {
+export function hasAvailableSlotForResource({
+  resource,
+  date,
+  duration,
+  bookings,
+  excludeBookingId,
+}: ResourceAvailabilityOptions) {
   return getAvailabilitySlots({
     resource,
-    date: getTodayDate(),
-    duration: minimumBookingDuration,
+    date,
+    duration,
     bookings,
     excludeBookingId,
   }).some((slot) => !slot.unavailable)
+}
+
+export function hasAvailableSlotForResourceToday(
+  resource: Resource,
+  bookings: Booking[],
+  duration = minimumBookingDuration,
+  excludeBookingId?: string,
+) {
+  return hasAvailableSlotForResource({
+    resource,
+    date: getTodayDate(),
+    duration,
+    bookings,
+    excludeBookingId,
+  })
 }
 
 export function getPastSameDayTimeError(date: string, startTime: string) {
@@ -132,11 +157,18 @@ export function getNoRemainingTodayError(
   resource: Resource,
   date: string,
   bookings: Booking[],
+  duration = minimumBookingDuration,
   excludeBookingId?: string,
 ) {
   if (
     isTodayDate(date) &&
-    !hasAvailableSlotForResourceToday(resource, bookings, excludeBookingId)
+    !hasAvailableSlotForResource({
+      resource,
+      date,
+      duration,
+      bookings,
+      excludeBookingId,
+    })
   ) {
     return 'This resource has no remaining available time today. Please choose another date or resource.'
   }

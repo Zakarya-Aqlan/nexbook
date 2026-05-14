@@ -1,6 +1,6 @@
 # NexBook
 
-NexBook is a smart campus resource booking system built with React, TypeScript, Vite, and Tailwind CSS. It helps students browse campus resources, create bookings, manage reservations, and avoid schedule conflicts through simple client-side validation.
+NexBook is a smart campus resource booking system built with React, TypeScript, Vite, and Tailwind CSS. It helps students browse campus resources, request bookings, manage reservations, and avoid schedule conflicts through simple client-side validation.
 
 ## Problem Statement
 
@@ -32,16 +32,6 @@ NexBook provides a clean web app where students can view available campus resour
 - Tailwind CSS
 - React Router
 - localStorage for demo persistence
-
-Note: Since this is a frontend prototype, booking data is saved in the browser's localStorage. Data is stored per browser/device and is used to demonstrate the full booking flow without a backend.
-
-## How To Use
-
-1. Browse campus resources from the Resources page.
-2. Select a resource and choose a booking date.
-3. Pick a duration and an available time slot.
-4. Submit the booking form.
-5. Manage active, cancelled, and completed bookings from My Bookings.
 
 ## How To Run Locally
 
@@ -121,6 +111,4 @@ Important files:
 
 ## Demo Link
 
-Deployed demo: Add your deployed link here
-
-GitHub Repository: Add your GitHub repository link here
+Deployed demo: `https://nexbook-campus.vercel.app/`

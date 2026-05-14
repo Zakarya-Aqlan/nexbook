@@ -3,7 +3,6 @@ import type { Resource, ResourceType } from '../types'
 
 type ResourceCardProps = {
   resource: Resource
-  unavailableToday?: boolean
 }
 
 const typeBadgeStyles: Record<ResourceType, string> = {
@@ -13,7 +12,7 @@ const typeBadgeStyles: Record<ResourceType, string> = {
   sports: 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-950 dark:text-green-300 dark:ring-green-900',
 }
 
-export function ResourceCard({ resource, unavailableToday = false }: ResourceCardProps) {
+export function ResourceCard({ resource }: ResourceCardProps) {
   return (
     <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 ease-in-out hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -29,11 +28,6 @@ export function ResourceCard({ resource, unavailableToday = false }: ResourceCar
           <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 transition-colors duration-300 ease-in-out ${typeBadgeStyles[resource.type]}`}>
             {resource.type}
           </span>
-          {unavailableToday && (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-700 ring-1 ring-amber-100 transition-colors duration-300 ease-in-out dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-900">
-              Booking hours ended
-            </span>
-          )}
         </div>
       </div>
 

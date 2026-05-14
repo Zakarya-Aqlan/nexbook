@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { Resource } from '../types'
 import {
   getAvailabilitySlots,
@@ -16,8 +15,10 @@ type AvailabilitySlotsProps = {
   resource: Resource | undefined
   date: string
   excludeBookingId?: string
+  duration: number
   selectedStartTime?: string
   selectedEndTime?: string
+  onDurationChange: (duration: number) => void
   onSelectSlot: (startTime: string, endTime: string) => void
 }
 
@@ -25,12 +26,12 @@ export function AvailabilitySlots({
   resource,
   date,
   excludeBookingId,
+  duration,
   selectedStartTime,
   selectedEndTime,
+  onDurationChange,
   onSelectSlot,
 }: AvailabilitySlotsProps) {
-  const [duration, setDuration] = useState(60)
-
   if (!resource) {
     return (
       <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -52,7 +53,7 @@ export function AvailabilitySlots({
   const closeMins = timeToMinutes(activeResource.closingTime)
 
   function handleDurationChange(newDur: number) {
-    setDuration(newDur)
+    onDurationChange(newDur)
 
     if (selectedStartTime) {
       const updatedSlots = getAvailabilitySlots({
@@ -68,7 +69,10 @@ export function AvailabilitySlots({
 
       if (matchingSlot && timeToMinutes(matchingSlot.endLabel) <= closeMins) {
         onSelectSlot(selectedStartTime, matchingSlot.endLabel)
+        return
       }
+
+      onSelectSlot('', '')
     }
   }
 

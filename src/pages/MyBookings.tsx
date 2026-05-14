@@ -11,7 +11,8 @@ import type { Booking } from '../types'
 import {
   getNoRemainingTodayError,
   getPastSameDayTimeError,
-  hasAvailableSlotForResourceToday,
+  hasAvailableSlotForResource,
+  timeToMinutes,
 } from '../utils/availabilityUtils'
 import {
   getDurationError,
@@ -20,7 +21,7 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
+import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -92,6 +93,7 @@ export function MyBookings() {
     endTime: '',
     purpose: '',
   })
+  const [editDuration, setEditDuration] = useState(60)
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [pendingSameDayEdit, setPendingSameDayEdit] = useState<Booking | null>(
@@ -141,28 +143,33 @@ export function MyBookings() {
   const selectedResource = resources.find(
     (resource) => resource.id === editForm.resourceId,
   )
-  const editUnavailableTodayResourceIds = resources
-    .filter(
-      (resource) =>
-        !hasAvailableSlotForResourceToday(
-          resource,
-          bookings,
-          editingBookingId || undefined,
-        ),
-    )
-    .map((resource) => resource.id)
-  const editTodayIsNoLongerBookable =
-    editUnavailableTodayResourceIds.length === resources.length
-  const editMinBookingDate = editTodayIsNoLongerBookable
-    ? getTomorrowDate()
-    : todayDate
   const editSelectedDateIsToday = editForm.date === todayDate
+  const editUnavailableTodayResourceIds = editSelectedDateIsToday
+    ? resources
+        .filter(
+          (resource) =>
+            !hasAvailableSlotForResource({
+              resource,
+              date: editForm.date,
+              duration: editDuration,
+              bookings,
+              excludeBookingId: editingBookingId || undefined,
+            }),
+        )
+        .map((resource) => resource.id)
+    : []
+  const editTodayIsNoLongerBookable =
+    editSelectedDateIsToday &&
+    editUnavailableTodayResourceIds.length === resources.length
+  const editMinBookingDate = todayDate
 
   function refreshBookings() {
     setBookings(getBookings())
   }
 
   function startEditing(booking: Booking) {
+    const bookingDuration = timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime)
+
     setEditingBookingId(booking.id)
     setEditForm({
       resourceId: booking.resourceId,
@@ -171,6 +178,7 @@ export function MyBookings() {
       endTime: booking.endTime,
       purpose: booking.purpose,
     })
+    setEditDuration([60, 120, 180].includes(bookingDuration) ? bookingDuration : 60)
     setMessage('')
     setErrorMessage('')
   }
@@ -184,6 +192,7 @@ export function MyBookings() {
       endTime: '',
       purpose: '',
     })
+    setEditDuration(60)
     setErrorMessage('')
     setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
@@ -323,6 +332,7 @@ export function MyBookings() {
         selectedResource,
         updatedBooking.date,
         bookings,
+        editDuration,
         updatedBooking.id,
       ) ||
       hasBookingConflict(updatedBooking, otherBookings)
@@ -469,11 +479,7 @@ export function MyBookings() {
                       label="Resource"
                       resources={resources}
                       value={editForm.resourceId}
-                      unavailableResourceIds={
-                        editSelectedDateIsToday
-                          ? editUnavailableTodayResourceIds
-                          : []
-                      }
+                      unavailableResourceIds={editUnavailableTodayResourceIds}
                       onChange={(resourceId) => {
                         setEditForm((currentForm) => ({
                           ...currentForm,
@@ -508,8 +514,10 @@ export function MyBookings() {
                         resource={selectedResource}
                         date={editForm.date}
                         excludeBookingId={editingBookingId}
+                        duration={editDuration}
                         selectedStartTime={editForm.startTime}
                         selectedEndTime={editForm.endTime}
+                        onDurationChange={setEditDuration}
                         onSelectSlot={(startTime, endTime) => {
                           updateEditField('startTime', startTime)
                           updateEditField('endTime', endTime)

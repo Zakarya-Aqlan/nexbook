@@ -5,7 +5,7 @@ import type { Booking } from '../types'
 import {
   getNoRemainingTodayError,
   getPastSameDayTimeError,
-  hasAvailableSlotForResourceToday,
+  hasAvailableSlotForResource,
 } from '../utils/availabilityUtils'
 import {
   getDurationError,
@@ -14,7 +14,7 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
+import { getTodayDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
 import { AvailabilitySlots } from './AvailabilitySlots'
 import { DatePicker } from './DatePicker'
@@ -76,6 +76,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
   const [pendingSameDayBooking, setPendingSameDayBooking] =
     useState<Booking | null>(null)
+  const [selectedDuration, setSelectedDuration] = useState(60)
   useEffect(() => {
     const resourceExists = resources.some(
       (resource) => resource.id === initialResourceId,
@@ -92,15 +93,24 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     [form.resourceId],
   )
   const savedBookings = getBookings()
-  const unavailableTodayResourceIds = resources
-    .filter((resource) => !hasAvailableSlotForResourceToday(resource, savedBookings))
-    .map((resource) => resource.id)
-  const todayIsNoLongerBookable =
-    unavailableTodayResourceIds.length === resources.length
-  const minBookingDate = todayIsNoLongerBookable
-    ? getTomorrowDate()
-    : getTodayDate()
   const selectedDateIsToday = form.date === getTodayDate()
+  const unavailableTodayResourceIds = selectedDateIsToday
+    ? resources
+        .filter(
+          (resource) =>
+            !hasAvailableSlotForResource({
+              resource,
+              date: form.date,
+              duration: selectedDuration,
+              bookings: savedBookings,
+            }),
+        )
+        .map((resource) => resource.id)
+    : []
+  const todayIsNoLongerBookable =
+    selectedDateIsToday &&
+    unavailableTodayResourceIds.length === resources.length
+  const minBookingDate = getTodayDate()
 
   const studentNameError = getStudentNameError(form.studentName)
   const studentIdError = getStudentIdError(form.studentId)
@@ -208,7 +218,12 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         newBooking.endTime,
       ) ||
       getPastSameDayTimeError(newBooking.date, newBooking.startTime) ||
-      getNoRemainingTodayError(selectedResource, newBooking.date, existingBookings) ||
+      getNoRemainingTodayError(
+        selectedResource,
+        newBooking.date,
+        existingBookings,
+        selectedDuration,
+      ) ||
       hasBookingConflict(newBooking, existingBookings)
 
     if (validationError) {
@@ -286,9 +301,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           label="Resource"
           resources={resources}
           value={form.resourceId}
-          unavailableResourceIds={
-            selectedDateIsToday ? unavailableTodayResourceIds : []
-          }
+          unavailableResourceIds={unavailableTodayResourceIds}
           onChange={(resourceId) => {
             setForm((currentForm) => ({
               ...currentForm,
@@ -337,8 +350,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           <AvailabilitySlots
             resource={selectedResource}
             date={form.date}
+            duration={selectedDuration}
             selectedStartTime={form.startTime}
             selectedEndTime={form.endTime}
+            onDurationChange={setSelectedDuration}
             onSelectSlot={(startTime, endTime) => {
               updateField('startTime', startTime)
               updateField('endTime', endTime)
