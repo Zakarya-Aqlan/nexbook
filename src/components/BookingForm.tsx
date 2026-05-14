@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
@@ -360,46 +361,65 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
         {confirmedBooking && selectedResource ? (
           <>
-          <p className="mt-4 rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:bg-green-950 dark:text-green-300">
-            Booking confirmed successfully!
-          </p>
-          <dl className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-400">
-            <div>
-              <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                Resource
-              </dt>
-              <dd>{selectedResource.name}</dd>
+            <p className="mt-4 rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:bg-green-950 dark:text-green-300">
+              Booking confirmed successfully!
+            </p>
+            <dl className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <div>
+                <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                  Resource
+                </dt>
+                <dd>{selectedResource.name}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                  Student
+                </dt>
+                <dd>
+                  {confirmedBooking.studentName} ({confirmedBooking.studentId})
+                </dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                  Date and Time
+                </dt>
+                <dd>
+                  {confirmedBooking.date}, {confirmedBooking.startTime} -{' '}
+                  {confirmedBooking.endTime}
+                </dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                  Purpose
+                </dt>
+                <dd>{confirmedBooking.purpose}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-slate-900 dark:text-slate-100">
+                  Status
+                </dt>
+                <dd className="capitalize">{confirmedBooking.status}</dd>
+              </div>
+            </dl>
+            <p className="mt-5 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
+              {confirmedBooking.date === getTodayDate()
+                ? 'This is a same-day booking, so editing is disabled after submission. You can still cancel it if needed.'
+                : 'Need to make changes? Please edit your booking before the booking date. Same-day bookings cannot be edited.'}
+            </p>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <Link
+                to="/"
+                className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
+              >
+                Go to Dashboard
+              </Link>
+              <Link
+                to="/my-bookings"
+                className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
+              >
+                View My Bookings
+              </Link>
             </div>
-            <div>
-              <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                Student
-              </dt>
-              <dd>
-                {confirmedBooking.studentName} ({confirmedBooking.studentId})
-              </dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                Date and Time
-              </dt>
-              <dd>
-                {confirmedBooking.date}, {confirmedBooking.startTime} -{' '}
-                {confirmedBooking.endTime}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                Purpose
-              </dt>
-              <dd>{confirmedBooking.purpose}</dd>
-            </div>
-            <div>
-              <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                Status
-              </dt>
-              <dd className="capitalize">{confirmedBooking.status}</dd>
-            </div>
-          </dl>
           </>
         ) : (
           <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
