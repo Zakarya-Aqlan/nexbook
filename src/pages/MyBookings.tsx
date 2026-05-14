@@ -5,6 +5,7 @@ import { AvailabilitySlots } from '../components/AvailabilitySlots'
 import { DatePicker } from '../components/DatePicker'
 import { ResourceSelect } from '../components/ResourceSelect'
 import { SameDayBookingModal } from '../components/SameDayBookingModal'
+import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
@@ -91,6 +92,7 @@ export function MyBookings() {
   const [pendingSameDayEdit, setPendingSameDayEdit] = useState<Booking | null>(
     null,
   )
+  const [pendingFinalEdit, setPendingFinalEdit] = useState<Booking | null>(null)
   const [todayDate, setTodayDate] = useState(getTodayDate)
   const [toastMessage, setToastMessage] = useState('')
 
@@ -163,6 +165,7 @@ export function MyBookings() {
     })
     setErrorMessage('')
     setPendingSameDayEdit(null)
+    setPendingFinalEdit(null)
   }
 
   function updateEditField(field: keyof EditFormValues, value: string) {
@@ -181,6 +184,7 @@ export function MyBookings() {
     setMessage('Booking cancelled successfully.')
     setErrorMessage('')
     setPendingSameDayEdit(null)
+    setPendingFinalEdit(null)
     setToastMessage('')
   }
 
@@ -225,6 +229,7 @@ export function MyBookings() {
     refreshBookings()
     stopEditing()
     setPendingSameDayEdit(null)
+    setPendingFinalEdit(null)
     setMessage('Booking updated successfully.')
     setErrorMessage('')
     setToastMessage(
@@ -299,8 +304,17 @@ export function MyBookings() {
       return
     }
 
+    if (getRemainingEdits(bookingToEdit) === 1) {
+      setPendingFinalEdit(updatedBooking)
+      setPendingSameDayEdit(null)
+      setMessage('')
+      setErrorMessage('')
+      return
+    }
+
     if (updatedBooking.date === todayDate) {
       setPendingSameDayEdit(updatedBooking)
+      setPendingFinalEdit(null)
       setMessage('')
       setErrorMessage('')
       return
@@ -321,6 +335,13 @@ export function MyBookings() {
         <SameDayBookingModal
           onConfirm={() => saveUpdatedBooking(pendingSameDayEdit)}
           onEditDetails={() => setPendingSameDayEdit(null)}
+        />
+      )}
+
+      {pendingFinalEdit && (
+        <FinalEditWarningModal
+          onConfirm={() => saveUpdatedBooking(pendingFinalEdit)}
+          onKeepEditing={() => setPendingFinalEdit(null)}
         />
       )}
 
