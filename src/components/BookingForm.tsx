@@ -179,6 +179,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       purpose: form.purpose.trim(),
       status: 'pending',
       createdAt: new Date().toISOString(),
+      remainingEdits: 2,
     }
 
     const validationError =

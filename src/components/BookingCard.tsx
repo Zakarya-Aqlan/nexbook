@@ -7,6 +7,7 @@ type BookingCardProps = {
   displayStatus: string
   canEdit: boolean
   canCancel: boolean
+  remainingEdits?: number
   onCancel: (bookingId: string) => void
   onEdit: (booking: Booking) => void
 }
@@ -26,6 +27,7 @@ export function BookingCard({
   displayStatus,
   canEdit,
   canCancel,
+  remainingEdits,
   onCancel,
   onEdit,
 }: BookingCardProps) {
@@ -47,6 +49,14 @@ export function BookingCard({
           {groupLabel}
         </span>
       </div>
+
+      {groupLabel === 'Active' && remainingEdits !== undefined && (
+        <p className="mt-4 w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition-colors duration-300 ease-in-out dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+          {remainingEdits > 0
+            ? `Edits left: ${remainingEdits}`
+            : 'No edits left'}
+        </p>
+      )}
 
       <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
         <div>

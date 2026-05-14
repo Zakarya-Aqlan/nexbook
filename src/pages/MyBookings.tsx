@@ -28,6 +28,7 @@ type EditFormValues = {
 }
 
 const filters: BookingFilter[] = ['Active', 'Cancelled', 'Completed']
+const maxRemainingEdits = 2
 
 function getBookingEndDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.endTime}:00`)
@@ -70,6 +71,10 @@ function getPurposeError(purpose: string) {
   return 'Purpose can only contain English letters, numbers, spaces, and basic punctuation.'
 }
 
+function getRemainingEdits(booking: Booking) {
+  return booking.remainingEdits ?? maxRemainingEdits
+}
+
 export function MyBookings() {
   const [bookings, setBookings] = useState<Booking[]>(() => getBookings())
   const [selectedFilter, setSelectedFilter] = useState<BookingFilter>('Active')
@@ -87,6 +92,7 @@ export function MyBookings() {
     null,
   )
   const [todayDate, setTodayDate] = useState(getTodayDate)
+  const [toastMessage, setToastMessage] = useState('')
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -95,6 +101,18 @@ export function MyBookings() {
 
     return () => window.clearInterval(intervalId)
   }, [])
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage('')
+    }, 3500)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [toastMessage])
 
   const bookingCounts = useMemo(
     () =>
@@ -163,6 +181,7 @@ export function MyBookings() {
     setMessage('Booking cancelled successfully.')
     setErrorMessage('')
     setPendingSameDayEdit(null)
+    setToastMessage('')
   }
 
   function getEditRequiredError() {
@@ -190,12 +209,29 @@ export function MyBookings() {
   }
 
   function saveUpdatedBooking(updatedBooking: Booking) {
-    updateBooking(updatedBooking)
+    const bookingToEdit = bookings.find(
+      (booking) => booking.id === updatedBooking.id,
+    )
+    const nextRemainingEdits = Math.max(
+      getRemainingEdits(bookingToEdit ?? updatedBooking) - 1,
+      0,
+    )
+    const bookingWithEditCount: Booking = {
+      ...updatedBooking,
+      remainingEdits: nextRemainingEdits,
+    }
+
+    updateBooking(bookingWithEditCount)
     refreshBookings()
     stopEditing()
     setPendingSameDayEdit(null)
     setMessage('Booking updated successfully.')
     setErrorMessage('')
+    setToastMessage(
+      nextRemainingEdits === 1
+        ? 'Booking updated. You have 1 edit left.'
+        : 'Booking updated. No edits left for this booking.',
+    )
   }
 
   function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
@@ -207,6 +243,11 @@ export function MyBookings() {
 
     if (!bookingToEdit) {
       setErrorMessage('Booking could not be found.')
+      return
+    }
+
+    if (getRemainingEdits(bookingToEdit) <= 0) {
+      setErrorMessage('No edits left for this booking.')
       return
     }
 
@@ -270,6 +311,12 @@ export function MyBookings() {
 
   return (
     <main className="space-y-10 transition-colors duration-300 ease-in-out">
+      {toastMessage && (
+        <div className="fixed right-4 top-4 z-50 max-w-sm rounded-xl border border-green-100 bg-white px-4 py-3 text-sm font-medium text-green-800 shadow-lg transition-colors duration-300 ease-in-out dark:border-green-900 dark:bg-slate-900 dark:text-green-300">
+          {toastMessage}
+        </div>
+      )}
+
       {pendingSameDayEdit && (
         <SameDayBookingModal
           onConfirm={() => saveUpdatedBooking(pendingSameDayEdit)}
@@ -333,6 +380,7 @@ export function MyBookings() {
             const bookingGroup = getBookingGroup(booking)
             const isEditing = editingBookingId === booking.id
             const isSameDayBooking = booking.date === todayDate
+            const remainingEdits = getRemainingEdits(booking)
 
             return (
               <div key={booking.id} className="space-y-3">
@@ -341,8 +389,15 @@ export function MyBookings() {
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
                   displayStatus={getDisplayStatus(booking)}
-                  canEdit={bookingGroup === 'Active' && !isSameDayBooking}
+                  canEdit={
+                    bookingGroup === 'Active' &&
+                    !isSameDayBooking &&
+                    remainingEdits > 0
+                  }
                   canCancel={bookingGroup === 'Active'}
+                  remainingEdits={
+                    bookingGroup === 'Active' ? remainingEdits : undefined
+                  }
                   onCancel={handleCancelBooking}
                   onEdit={startEditing}
                 />
