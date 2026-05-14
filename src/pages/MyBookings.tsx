@@ -323,7 +323,7 @@ export function MyBookings() {
                     </div>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Resource
                       </span>
                       <select
@@ -351,7 +351,7 @@ export function MyBookings() {
 
                     <section className="mt-8 space-y-4 border-t border-blue-200 pt-6 dark:border-slate-800">
                       <label className="block space-y-2">
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                           Date
                         </span>
                         <input
@@ -383,7 +383,7 @@ export function MyBookings() {
                     </section>
 
                     <label className="space-y-2">
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                         Purpose
                       </span>
                       <textarea

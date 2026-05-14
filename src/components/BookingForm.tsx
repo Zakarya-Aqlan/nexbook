@@ -199,7 +199,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       >
         <div className="grid gap-5 md:grid-cols-2">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Student Name
             </span>
             <input
@@ -219,7 +219,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Student ID
             </span>
             <input
@@ -238,7 +238,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </div>
 
         <label className="space-y-2">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Resource
           </span>
           <select
@@ -281,7 +281,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
         <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 dark:border-slate-800">
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
               Date
             </span>
             <input
@@ -310,7 +310,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </section>
 
         <label className="space-y-2">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
             Purpose
           </span>
           <textarea
