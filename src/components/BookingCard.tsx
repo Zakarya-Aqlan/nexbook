@@ -28,7 +28,7 @@ export function BookingCard({
   onEdit,
 }: BookingCardProps) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900">
+    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
@@ -40,13 +40,13 @@ export function BookingCard({
         </div>
 
         <span
-          className={`w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 ${statusStyles[groupLabel]}`}
+          className={`w-fit rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 transition-colors duration-300 ease-in-out ${statusStyles[groupLabel]}`}
         >
           {groupLabel}
         </span>
       </div>
 
-      <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
+      <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
         <div>
           <dt className="font-semibold text-slate-900 dark:text-slate-100">
             Student
@@ -72,14 +72,14 @@ export function BookingCard({
           <button
             type="button"
             onClick={() => onEdit(booking)}
-            className="min-h-10 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
+            className="min-h-10 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => onCancel(booking.id)}
-            className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-900"
+            className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-900"
           >
             Cancel Booking
           </button>

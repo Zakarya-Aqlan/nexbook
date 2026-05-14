@@ -2,6 +2,39 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@media (prefers-reduced-motion: no-preference) {
+  :where(
+    body,
+    #root,
+    main,
+    section,
+    article,
+    aside,
+    header,
+    nav,
+    form,
+    div,
+    p,
+    span,
+    h1,
+    h2,
+    h3,
+    dl,
+    dt,
+    dd,
+    a,
+    button,
+    input,
+    select,
+    textarea
+  ) {
+    transition-property: color, background-color, border-color,
+      text-decoration-color, fill, stroke, box-shadow;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+  }
+}
+
 input[type="date"],
 input[type="time"] {
   color-scheme: light;

@@ -79,7 +79,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/90">
+    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950/90">
       <nav className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div>
           <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
@@ -97,7 +97,7 @@ export function Navbar() {
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
+                  `rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
                     isActive
                       ? 'bg-blue-700 text-white shadow-sm dark:bg-blue-600'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
@@ -118,7 +118,7 @@ export function Navbar() {
             title={
               theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
             }
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors duration-300 hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:ring-blue-900"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors duration-300 ease-in-out hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:ring-blue-900"
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>

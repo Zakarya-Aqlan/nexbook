@@ -22,7 +22,7 @@ export function Resources() {
       : resources.filter((resource) => resource.type === selectedType)
 
   return (
-    <main className="space-y-10">
+    <main className="space-y-10 transition-colors duration-300 ease-in-out">
       <section className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
           Resources
@@ -42,7 +42,7 @@ export function Resources() {
             key={filter.value}
             type="button"
             onClick={() => setSelectedType(filter.value)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ${
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors duration-300 ease-in-out ${
               selectedType === filter.value
                 ? 'bg-blue-700 text-white shadow-sm dark:bg-blue-600'
                 : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100 hover:text-slate-950 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 dark:hover:bg-slate-800 dark:hover:text-white'

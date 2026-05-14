@@ -43,7 +43,7 @@ export function Dashboard() {
   const nextUpcomingBooking = upcomingBookings[0]
 
   return (
-    <main className="space-y-10">
+    <main className="space-y-10 transition-colors duration-300 ease-in-out">
       <section className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
           Dashboard
@@ -81,7 +81,7 @@ export function Dashboard() {
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[2fr_1fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
               Next Upcoming Booking
@@ -94,7 +94,7 @@ export function Dashboard() {
           </div>
 
           {nextUpcomingBooking ? (
-            <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
+            <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
                   Date
@@ -130,7 +130,7 @@ export function Dashboard() {
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900">
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
             Quick Actions
           </p>
@@ -140,13 +140,13 @@ export function Dashboard() {
           <div className="mt-5 flex flex-col gap-3">
             <Link
               to="/resources"
-              className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
+              className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
             >
               View Resources
             </Link>
             <Link
               to="/book"
-              className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
+              className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
             >
               Book a Resource
             </Link>

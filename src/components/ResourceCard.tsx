@@ -14,7 +14,7 @@ const typeBadgeStyles: Record<ResourceType, string> = {
 
 export function ResourceCard({ resource }: ResourceCardProps) {
   return (
-    <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900">
+    <article className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-300 ease-in-out hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-900">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
@@ -24,12 +24,12 @@ export function ResourceCard({ resource }: ResourceCardProps) {
             {resource.location}
           </p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 ${typeBadgeStyles[resource.type]}`}>
+        <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ring-1 transition-colors duration-300 ease-in-out ${typeBadgeStyles[resource.type]}`}>
           {resource.type}
         </span>
       </div>
 
-      <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
+      <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
         <div>
           <dt className="font-semibold text-slate-900 dark:text-slate-100">
             Capacity
@@ -52,7 +52,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
 
       <Link
         to={`/book/${resource.id}`}
-        className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-300 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
+        className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
       >
         Book Now
       </Link>

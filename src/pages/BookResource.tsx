@@ -5,7 +5,7 @@ export function BookResource() {
   const { resourceId } = useParams()
 
   return (
-    <main className="space-y-10">
+    <main className="space-y-10 transition-colors duration-300 ease-in-out">
       <section className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
           Book
