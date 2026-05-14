@@ -9,13 +9,18 @@ import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
+  getNoRemainingTodayError,
+  getPastSameDayTimeError,
+  hasAvailableSlotForResourceToday,
+} from '../utils/availabilityUtils'
+import {
   getDurationError,
   getOpeningHoursError,
   getPastDateError,
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate } from '../utils/dateUtils'
+import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -136,6 +141,22 @@ export function MyBookings() {
   const selectedResource = resources.find(
     (resource) => resource.id === editForm.resourceId,
   )
+  const editUnavailableTodayResourceIds = resources
+    .filter(
+      (resource) =>
+        !hasAvailableSlotForResourceToday(
+          resource,
+          bookings,
+          editingBookingId || undefined,
+        ),
+    )
+    .map((resource) => resource.id)
+  const editTodayIsNoLongerBookable =
+    editUnavailableTodayResourceIds.length === resources.length
+  const editMinBookingDate = editTodayIsNoLongerBookable
+    ? getTomorrowDate()
+    : todayDate
+  const editSelectedDateIsToday = editForm.date === todayDate
 
   function refreshBookings() {
     setBookings(getBookings())
@@ -297,6 +318,13 @@ export function MyBookings() {
         updatedBooking.startTime,
         updatedBooking.endTime,
       ) ||
+      getPastSameDayTimeError(updatedBooking.date, updatedBooking.startTime) ||
+      getNoRemainingTodayError(
+        selectedResource,
+        updatedBooking.date,
+        bookings,
+        updatedBooking.id,
+      ) ||
       hasBookingConflict(updatedBooking, otherBookings)
 
     if (validationError) {
@@ -441,6 +469,11 @@ export function MyBookings() {
                       label="Resource"
                       resources={resources}
                       value={editForm.resourceId}
+                      unavailableResourceIds={
+                        editSelectedDateIsToday
+                          ? editUnavailableTodayResourceIds
+                          : []
+                      }
                       onChange={(resourceId) => {
                         setEditForm((currentForm) => ({
                           ...currentForm,
@@ -457,8 +490,15 @@ export function MyBookings() {
                       <DatePicker
                         label="Date"
                         value={editForm.date}
+                        minDate={editMinBookingDate}
                         onChange={(date) => updateEditField('date', date)}
                       />
+                      {editTodayIsNoLongerBookable && (
+                        <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                          Bookings for today are no longer available. Please
+                          choose another date.
+                        </p>
+                      )}
                       <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
                         Pick a new date, then select an available slot. This
                         booking will not block its own current time.

@@ -3,13 +3,18 @@ import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
+  getNoRemainingTodayError,
+  getPastSameDayTimeError,
+  hasAvailableSlotForResourceToday,
+} from '../utils/availabilityUtils'
+import {
   getDurationError,
   getOpeningHoursError,
   getPastDateError,
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate } from '../utils/dateUtils'
+import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
 import { AvailabilitySlots } from './AvailabilitySlots'
 import { DatePicker } from './DatePicker'
@@ -86,6 +91,16 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     () => resources.find((resource) => resource.id === form.resourceId),
     [form.resourceId],
   )
+  const savedBookings = getBookings()
+  const unavailableTodayResourceIds = resources
+    .filter((resource) => !hasAvailableSlotForResourceToday(resource, savedBookings))
+    .map((resource) => resource.id)
+  const todayIsNoLongerBookable =
+    unavailableTodayResourceIds.length === resources.length
+  const minBookingDate = todayIsNoLongerBookable
+    ? getTomorrowDate()
+    : getTodayDate()
+  const selectedDateIsToday = form.date === getTodayDate()
 
   const studentNameError = getStudentNameError(form.studentName)
   const studentIdError = getStudentIdError(form.studentId)
@@ -182,6 +197,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       remainingEdits: 2,
     }
 
+    const existingBookings = getBookings()
     const validationError =
       getPastDateError(newBooking.date) ||
       getTimeRangeError(newBooking.startTime, newBooking.endTime) ||
@@ -191,7 +207,9 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         newBooking.startTime,
         newBooking.endTime,
       ) ||
-      hasBookingConflict(newBooking, getBookings())
+      getPastSameDayTimeError(newBooking.date, newBooking.startTime) ||
+      getNoRemainingTodayError(selectedResource, newBooking.date, existingBookings) ||
+      hasBookingConflict(newBooking, existingBookings)
 
     if (validationError) {
       setErrorMessage(validationError)
@@ -268,6 +286,9 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           label="Resource"
           resources={resources}
           value={form.resourceId}
+          unavailableResourceIds={
+            selectedDateIsToday ? unavailableTodayResourceIds : []
+          }
           onChange={(resourceId) => {
             setForm((currentForm) => ({
               ...currentForm,
@@ -299,8 +320,15 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           <DatePicker
             label="Date"
             value={form.date}
+            minDate={minBookingDate}
             onChange={(date) => updateField('date', date)}
           />
+          {todayIsNoLongerBookable && (
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+              Bookings for today are no longer available. Please choose another
+              date.
+            </p>
+          )}
           <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
             Select a date first, then choose one of the available time slots
             below.

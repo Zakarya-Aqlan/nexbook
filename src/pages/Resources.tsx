@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { ResourceCard } from '../components/ResourceCard'
 import { resources } from '../data/resources'
 import type { ResourceType } from '../types'
+import { hasAvailableSlotForResourceToday } from '../utils/availabilityUtils'
+import { getBookings } from '../utils/storage'
 
 type ResourceFilter = 'all' | ResourceType
 
@@ -15,6 +17,12 @@ const filters: { label: string; value: ResourceFilter }[] = [
 
 export function Resources() {
   const [selectedType, setSelectedType] = useState<ResourceFilter>('all')
+  const bookings = getBookings()
+  const unavailableTodayResourceIds = new Set(
+    resources
+      .filter((resource) => !hasAvailableSlotForResourceToday(resource, bookings))
+      .map((resource) => resource.id),
+  )
 
   const filteredResources =
     selectedType === 'all'
@@ -55,7 +63,11 @@ export function Resources() {
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filteredResources.map((resource) => (
-          <ResourceCard key={resource.id} resource={resource} />
+          <ResourceCard
+            key={resource.id}
+            resource={resource}
+            unavailableToday={unavailableTodayResourceIds.has(resource.id)}
+          />
         ))}
       </section>
     </main>
