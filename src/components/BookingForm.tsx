@@ -8,9 +8,10 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
 import { AvailabilitySlots } from './AvailabilitySlots'
+import { DatePicker } from './DatePicker'
+import { ResourceSelect } from './ResourceSelect'
 
 type BookingFormProps = {
   initialResourceId?: string
@@ -237,32 +238,21 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           </label>
         </div>
 
-        <label className="space-y-2">
-          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Resource
-          </span>
-          <select
-            value={form.resourceId}
-            onChange={(event) => {
-              setForm((currentForm) => ({
-                ...currentForm,
-                resourceId: event.target.value,
-                startTime: '',
-                endTime: '',
-              }))
-              setErrorMessage('')
-              setSuccessMessage('')
-            }}
-            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-          >
-            <option value="">Choose a resource</option>
-            {resources.map((resource) => (
-              <option key={resource.id} value={resource.id}>
-                {resource.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <ResourceSelect
+          label="Resource"
+          resources={resources}
+          value={form.resourceId}
+          onChange={(resourceId) => {
+            setForm((currentForm) => ({
+              ...currentForm,
+              resourceId,
+              startTime: '',
+              endTime: '',
+            }))
+            setErrorMessage('')
+            setSuccessMessage('')
+          }}
+        />
 
         {selectedResource && (
           <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-950 ring-1 ring-blue-100 transition-colors duration-300 ease-in-out dark:bg-blue-950 dark:text-blue-100 dark:ring-blue-900">
@@ -280,18 +270,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         )}
 
         <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 transition-colors duration-300 ease-in-out dark:border-slate-800">
-          <label className="block space-y-2">
-            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Date
-            </span>
-            <input
-              type="date"
-              min={getTodayDate()}
-              value={form.date}
-              onChange={(event) => updateField('date', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out focus:border-blue-700 focus:ring-2 focus:ring-blue-100 sm:max-w-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-            />
-          </label>
+          <DatePicker
+            label="Date"
+            value={form.date}
+            onChange={(date) => updateField('date', date)}
+          />
           <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
             Select a date first, then choose one of the available time slots
             below.

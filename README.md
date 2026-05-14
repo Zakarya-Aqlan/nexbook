@@ -1,73 +1,126 @@
-# React + TypeScript + Vite
+# NexBook
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+NexBook is a smart campus resource booking system built with React, TypeScript, Vite, and Tailwind CSS. It helps students browse campus resources, create bookings, manage reservations, and avoid schedule conflicts through simple client-side validation.
 
-Currently, two official plugins are available:
+## Problem Statement
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Students often need to book shared campus spaces and equipment such as study rooms, labs, presentation rooms, and media kits. Without a clear booking interface, it is easy to create overlapping reservations, miss availability rules, or lose track of active and cancelled bookings.
 
-## React Compiler
+## Solution
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+NexBook provides a clean web app where students can view available campus resources, submit booking requests, and manage their bookings from one place. The app uses mock campus data and browser localStorage so the full booking flow can be demonstrated without a backend.
 
-## Expanding the ESLint configuration
+## Key Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Dashboard with resource and booking statistics
+- Resource listing with simple type filters
+- Booking form with required-field validation
+- Student name, student ID, and purpose input validation
+- Availability slot selection based on resource opening hours
+- Conflict prevention for overlapping bookings
+- My Bookings page with Active, Cancelled, and Completed filters
+- Edit and cancel booking actions
+- Computed completed status for past bookings
+- Light and dark mode with saved theme preference
+- Responsive Tailwind CSS interface
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- React Router
+- localStorage for demo persistence
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Note: Since this is a frontend prototype, booking data is saved in the browser's localStorage. Data is stored per browser/device and is used to demonstrate the full booking flow without a backend.
+
+## How To Use
+
+1. Browse campus resources from the Resources page.
+2. Select a resource and choose a booking date.
+3. Pick a duration and an available time slot.
+4. Submit the booking form.
+5. Manage active, cancelled, and completed bookings from My Bookings.
+
+## How To Run Locally
+
+1. Install dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Start the development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+3. Open the local Vite URL shown in the terminal, usually:
+
+```text
+http://localhost:5173
+```
+
+4. Build the project:
+
+```bash
+npm run build
+```
+
+## Conflict Prevention
+
+NexBook prevents overlapping active bookings for the same resource on the same date.
+
+A conflict exists when:
+
+- The existing booking has the same `resourceId`
+- The existing booking has the same `date`
+- The existing booking is not cancelled
+- The requested time overlaps the existing booking time
+
+The overlap rule is:
+
+```text
+newStart < existingEnd && newEnd > existingStart
+```
+
+This allows back-to-back bookings such as `10:00-11:00` and `11:00-12:00`, while blocking bookings that overlap in time.
+
+## Project Structure
+
+```text
+src/
+  components/        Reusable UI components such as Navbar, cards, forms, and availability slots
+  data/              Mock campus resource data
+  pages/             Main app pages for dashboard, resources, booking, and user bookings
+  types/             Shared TypeScript types and interfaces
+  utils/             Booking validation, date helpers, and localStorage helpers
+  assets/            Static assets used by the app
+```
+
+Important files:
+
+- `src/App.tsx` defines the main routes.
+- `src/data/resources.ts` stores mock campus resources.
+- `src/utils/bookingUtils.ts` contains booking validation and conflict checks.
+- `src/utils/storage.ts` handles booking persistence in localStorage.
+- `src/components/BookingForm.tsx` handles new booking creation.
+- `src/pages/MyBookings.tsx` handles booking management.
+
+## Future Improvements
+
+- Add user authentication for students and administrators
+- Replace localStorage with a real backend database
+- Add admin approval workflows for pending bookings
+- Add email or in-app booking notifications
+- Add calendar view for resource availability
+- Add search and advanced filters for resources
+- Add unit tests for booking validation and conflict prevention
+
+## Demo Link
+
+Deployed demo: Add your deployed link here
+
+GitHub Repository: Add your GitHub repository link here

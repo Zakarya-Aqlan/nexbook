@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { BookingCard } from '../components/BookingCard'
 import { EmptyState } from '../components/EmptyState'
 import { AvailabilitySlots } from '../components/AvailabilitySlots'
+import { DatePicker } from '../components/DatePicker'
+import { ResourceSelect } from '../components/ResourceSelect'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
@@ -11,7 +13,6 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -322,48 +323,28 @@ export function MyBookings() {
                       </p>
                     </div>
 
-                    <label className="space-y-2">
-                      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Resource
-                      </span>
-                      <select
-                        value={editForm.resourceId}
-                        onChange={(event) => {
-                          setEditForm((currentForm) => ({
-                            ...currentForm,
-                            resourceId: event.target.value,
-                            startTime: '',
-                            endTime: '',
-                          }))
-                          setMessage('')
-                          setErrorMessage('')
-                        }}
-                        className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                      >
-                        <option value="">Choose a resource</option>
-                        {resources.map((resource) => (
-                          <option key={resource.id} value={resource.id}>
-                            {resource.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <ResourceSelect
+                      label="Resource"
+                      resources={resources}
+                      value={editForm.resourceId}
+                      onChange={(resourceId) => {
+                        setEditForm((currentForm) => ({
+                          ...currentForm,
+                          resourceId,
+                          startTime: '',
+                          endTime: '',
+                        }))
+                        setMessage('')
+                        setErrorMessage('')
+                      }}
+                    />
 
                     <section className="mt-8 space-y-4 border-t border-blue-200 pt-6 transition-colors duration-300 ease-in-out dark:border-slate-800">
-                      <label className="block space-y-2">
-                        <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Date
-                        </span>
-                        <input
-                          type="date"
-                          min={getTodayDate()}
-                          value={editForm.date}
-                          onChange={(event) =>
-                            updateEditField('date', event.target.value)
-                          }
-                          className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out focus:border-blue-700 focus:ring-2 focus:ring-blue-100 sm:max-w-xs dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                        />
-                      </label>
+                      <DatePicker
+                        label="Date"
+                        value={editForm.date}
+                        onChange={(date) => updateEditField('date', date)}
+                      />
                       <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
                         Pick a new date, then select an available slot. This
                         booking will not block its own current time.
