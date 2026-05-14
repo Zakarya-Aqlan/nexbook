@@ -8,10 +8,12 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
+import { getTodayDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
 import { AvailabilitySlots } from './AvailabilitySlots'
 import { DatePicker } from './DatePicker'
 import { ResourceSelect } from './ResourceSelect'
+import { SameDayBookingModal } from './SameDayBookingModal'
 
 type BookingFormProps = {
   initialResourceId?: string
@@ -66,6 +68,8 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
+  const [pendingSameDayBooking, setPendingSameDayBooking] =
+    useState<Booking | null>(null)
   useEffect(() => {
     const resourceExists = resources.some(
       (resource) => resource.id === initialResourceId,
@@ -127,6 +131,14 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     return null
   }
 
+  function saveBooking(booking: Booking) {
+    addBooking(booking)
+    setConfirmedBooking(booking)
+    setSuccessMessage('Booking request saved successfully.')
+    setErrorMessage('')
+    setPendingSameDayBooking(null)
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -186,14 +198,26 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       return
     }
 
-    addBooking(newBooking)
-    setConfirmedBooking(newBooking)
-    setSuccessMessage('Booking request saved successfully.')
-    setErrorMessage('')
+    if (newBooking.date === getTodayDate()) {
+      setPendingSameDayBooking(newBooking)
+      setConfirmedBooking(null)
+      setSuccessMessage('')
+      setErrorMessage('')
+      return
+    }
+
+    saveBooking(newBooking)
   }
 
   return (
     <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+      {pendingSameDayBooking && (
+        <SameDayBookingModal
+          onConfirm={() => saveBooking(pendingSameDayBooking)}
+          onEditDetails={() => setPendingSameDayBooking(null)}
+        />
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900"

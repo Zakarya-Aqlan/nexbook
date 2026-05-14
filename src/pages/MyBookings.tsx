@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { BookingCard } from '../components/BookingCard'
 import { EmptyState } from '../components/EmptyState'
 import { AvailabilitySlots } from '../components/AvailabilitySlots'
 import { DatePicker } from '../components/DatePicker'
 import { ResourceSelect } from '../components/ResourceSelect'
+import { SameDayBookingModal } from '../components/SameDayBookingModal'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
@@ -13,6 +14,7 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
+import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -81,6 +83,18 @@ export function MyBookings() {
   })
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [pendingSameDayEdit, setPendingSameDayEdit] = useState<Booking | null>(
+    null,
+  )
+  const [todayDate, setTodayDate] = useState(getTodayDate)
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setTodayDate(getTodayDate())
+    }, 60_000)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const bookingCounts = useMemo(
     () =>
@@ -130,6 +144,7 @@ export function MyBookings() {
       purpose: '',
     })
     setErrorMessage('')
+    setPendingSameDayEdit(null)
   }
 
   function updateEditField(field: keyof EditFormValues, value: string) {
@@ -147,6 +162,7 @@ export function MyBookings() {
     setEditingBookingId('')
     setMessage('Booking cancelled successfully.')
     setErrorMessage('')
+    setPendingSameDayEdit(null)
   }
 
   function getEditRequiredError() {
@@ -171,6 +187,15 @@ export function MyBookings() {
     }
 
     return null
+  }
+
+  function saveUpdatedBooking(updatedBooking: Booking) {
+    updateBooking(updatedBooking)
+    refreshBookings()
+    stopEditing()
+    setPendingSameDayEdit(null)
+    setMessage('Booking updated successfully.')
+    setErrorMessage('')
   }
 
   function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
@@ -233,14 +258,25 @@ export function MyBookings() {
       return
     }
 
-    updateBooking(updatedBooking)
-    refreshBookings()
-    stopEditing()
-    setMessage('Booking updated successfully.')
+    if (updatedBooking.date === todayDate) {
+      setPendingSameDayEdit(updatedBooking)
+      setMessage('')
+      setErrorMessage('')
+      return
+    }
+
+    saveUpdatedBooking(updatedBooking)
   }
 
   return (
     <main className="space-y-10 transition-colors duration-300 ease-in-out">
+      {pendingSameDayEdit && (
+        <SameDayBookingModal
+          onConfirm={() => saveUpdatedBooking(pendingSameDayEdit)}
+          onEditDetails={() => setPendingSameDayEdit(null)}
+        />
+      )}
+
       <section className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
           My Bookings
@@ -296,6 +332,7 @@ export function MyBookings() {
           {filteredBookings.map((booking) => {
             const bookingGroup = getBookingGroup(booking)
             const isEditing = editingBookingId === booking.id
+            const isSameDayBooking = booking.date === todayDate
 
             return (
               <div key={booking.id} className="space-y-3">
@@ -304,7 +341,8 @@ export function MyBookings() {
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
                   displayStatus={getDisplayStatus(booking)}
-                  canManage={bookingGroup === 'Active'}
+                  canEdit={bookingGroup === 'Active' && !isSameDayBooking}
+                  canCancel={bookingGroup === 'Active'}
                   onCancel={handleCancelBooking}
                   onEdit={startEditing}
                 />
