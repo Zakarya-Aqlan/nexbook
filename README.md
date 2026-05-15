@@ -137,5 +137,5 @@ Important files:
 
 ## Links
 
-- Deployed demo: `TODO: Add deployed demo URL`
-- GitHub repository: `TODO: Add GitHub repository URL`
+- Deployed demo: https://nexbook-campus.vercel.app
+- GitHub repository: https://github.com/Zakarya-Aqlan/nexbook
