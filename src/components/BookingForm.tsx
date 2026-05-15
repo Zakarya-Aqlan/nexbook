@@ -50,7 +50,7 @@ function getStudentNameError(studentName: string) {
     return ''
   }
 
-  return 'Student Name can only contain English letters and spaces.'
+  return 'Student Name must contain English letters and spaces only.'
 }
 
 function getStudentIdError(studentId: string) {
@@ -58,7 +58,7 @@ function getStudentIdError(studentId: string) {
     return ''
   }
 
-  return 'Student ID can only contain numbers.'
+  return 'Student ID must contain numbers only.'
 }
 
 function getPurposeError(purpose: string) {
@@ -66,7 +66,7 @@ function getPurposeError(purpose: string) {
     return ''
   }
 
-  return 'Purpose can only contain English letters, numbers, spaces, and basic punctuation.'
+  return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
 }
 
 export function BookingForm({ initialResourceId }: BookingFormProps) {
@@ -115,6 +115,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const studentNameError = getStudentNameError(form.studentName)
   const studentIdError = getStudentIdError(form.studentId)
   const purposeError = getPurposeError(form.purpose)
+  const fieldValidationErrors = [
+    studentNameError,
+    studentIdError,
+    purposeError,
+  ].filter(Boolean)
 
   function updateField(field: keyof BookingFormValues, value: string) {
     setForm((currentForm) => ({
@@ -177,10 +182,8 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       return
     }
 
-    if (studentNameError || studentIdError || purposeError) {
-      setErrorMessage(
-        'Please use English input only. Student Name must contain letters only, Student ID must contain numbers only, and Purpose can only use English letters, numbers, spaces, and basic punctuation.',
-      )
+    if (fieldValidationErrors.length > 0) {
+      setErrorMessage(fieldValidationErrors.join('\n'))
       setSuccessMessage('')
       setConfirmedBooking(null)
       return
@@ -379,7 +382,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </label>
 
         {errorMessage && (
-          <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
+          <p className="whitespace-pre-line rounded-lg border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
             {errorMessage}
           </p>
         )}

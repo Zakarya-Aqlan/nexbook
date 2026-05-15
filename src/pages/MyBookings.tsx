@@ -75,7 +75,7 @@ function getPurposeError(purpose: string) {
     return ''
   }
 
-  return 'Purpose can only contain English letters, numbers, spaces, and basic punctuation.'
+  return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
 }
 
 function getRemainingEdits(booking: Booking) {
