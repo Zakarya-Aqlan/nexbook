@@ -155,7 +155,7 @@ export function DatePicker({
 
   return (
     <div ref={containerRef} className="relative space-y-2 sm:max-w-xs">
-      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
         {label}
       </span>
 
@@ -165,7 +165,7 @@ export function DatePicker({
         aria-haspopup="dialog"
         aria-label={label}
         onClick={() => setIsOpen((currentValue) => !currentValue)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-blue-300 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-blue-700 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-slate-400 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900"
       >
         <span
           className={
@@ -182,13 +182,13 @@ export function DatePicker({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 z-30 mt-2 w-full min-w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-lg transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950">
+        <div className="absolute left-0 z-30 mt-2 w-full min-w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-xl ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:ring-slate-800">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setVisibleMonth(previousMonth)}
               disabled={previousDisabled}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-colors duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Prev
             </button>
@@ -198,7 +198,7 @@ export function DatePicker({
             <button
               type="button"
               onClick={() => setVisibleMonth(addMonths(visibleMonth, 1))}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors duration-300 ease-in-out hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-colors duration-300 ease-in-out hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               Next
             </button>
@@ -235,7 +235,7 @@ export function DatePicker({
                   type="button"
                   onClick={() => handleSelectDate(day)}
                   disabled={isDisabled}
-                  className={`h-9 rounded-lg text-sm font-medium transition-colors duration-300 ease-in-out ${
+                  className={`h-9 rounded-lg text-sm font-medium transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
                     isSelected
                       ? 'bg-blue-700 text-white shadow-sm dark:bg-blue-600'
                       : isDisabled

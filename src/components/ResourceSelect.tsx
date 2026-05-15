@@ -120,7 +120,7 @@ export function ResourceSelect({
 
   return (
     <div ref={containerRef} className="relative space-y-2">
-      <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+      <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
         {label}
       </span>
 
@@ -130,7 +130,7 @@ export function ResourceSelect({
         aria-haspopup="listbox"
         aria-label={label}
         onClick={() => setIsOpen((currentValue) => !currentValue)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-blue-300 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-blue-700 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-slate-400 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900"
       >
         <span className="min-w-0">
           <span
@@ -158,7 +158,7 @@ export function ResourceSelect({
       {isOpen && (
         <div
           role="listbox"
-          className="custom-scrollbar absolute left-0 right-0 z-30 mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950"
+          className="custom-scrollbar absolute left-0 right-0 z-30 mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:ring-slate-800"
         >
           {resources.map((resource) => {
             const isSelected = resource.id === value
@@ -174,7 +174,7 @@ export function ResourceSelect({
                 aria-selected={isSelected}
                 disabled={isUnavailable}
                 onClick={() => handleSelect(resource.id)}
-                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors duration-300 ease-in-out ${
+                className={`w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
                   isSelected
                     ? 'bg-blue-700 text-white dark:bg-blue-600'
                     : isUnavailable

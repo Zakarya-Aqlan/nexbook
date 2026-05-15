@@ -79,25 +79,18 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950/90">
-      <nav className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <div>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-            NexBook
-          </p>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Campus resource booking
-          </p>
-        </div>
+    <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950/90">
+      <nav className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[2.5rem_1fr_2.5rem] lg:px-8">
+        <div aria-hidden="true" className="hidden h-10 w-10 lg:block" />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-2">
+        <div className="flex justify-center">
+          <div className="flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl border border-white/70 bg-white p-1.5 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800">
             {links.map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
                 className={({ isActive }) =>
-                  `rounded-lg px-3.5 py-2.5 text-sm font-semibold transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
+                  `rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
                     isActive
                       ? 'bg-blue-700 text-white shadow-sm dark:bg-blue-600'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
@@ -108,7 +101,9 @@ export function Navbar() {
               </NavLink>
             ))}
           </div>
+        </div>
 
+        <div className="flex justify-center lg:justify-end">
           <button
             type="button"
             onClick={toggleTheme}
@@ -118,7 +113,7 @@ export function Navbar() {
             title={
               theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
             }
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 shadow-sm transition-colors duration-300 ease-in-out hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:ring-blue-900"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white text-slate-700 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:ring-blue-900"
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>

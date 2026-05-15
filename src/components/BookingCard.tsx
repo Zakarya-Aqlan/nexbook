@@ -32,10 +32,10 @@ export function BookingCard({
   onEdit,
 }: BookingCardProps) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900">
+    <article className="rounded-2xl border border-white/70 bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
             {resourceName}
           </h2>
           <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
@@ -58,7 +58,7 @@ export function BookingCard({
         </p>
       )}
 
-      <dl className="mt-5 grid gap-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:bg-slate-950 dark:text-slate-400">
+      <dl className="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
         <div>
           <dt className="font-semibold text-slate-900 dark:text-slate-100">
             Student
@@ -85,7 +85,7 @@ export function BookingCard({
             <button
               type="button"
               onClick={() => onEdit(booking)}
-              className="min-h-10 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
+              className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors duration-300 ease-in-out hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-blue-900 dark:hover:bg-blue-950 dark:hover:text-blue-300 dark:focus:ring-blue-900"
             >
               Edit
             </button>

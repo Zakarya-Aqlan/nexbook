@@ -312,7 +312,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+    <section className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
       {pendingSameDayBooking && (
         <SameDayBookingModal
           onConfirm={() => saveBooking(pendingSameDayBooking)}
@@ -322,82 +322,105 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900"
+        className="space-y-6 rounded-2xl border border-white/70 bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800"
       >
-        <div className="grid gap-5 md:grid-cols-2">
-          <label className="space-y-2">
-            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Student Name
-            </span>
-            <input
-              type="text"
-              value={form.studentName}
-              onChange={(event) =>
-                updateField('studentName', event.target.value)
-              }
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-              placeholder="Alex Tan"
-            />
-            {studentNameError && (
-              <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
-                {studentNameError}
-              </p>
-            )}
-          </label>
-
-          <label className="space-y-2">
-            <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Student ID
-            </span>
-            <input
-              type="text"
-              value={form.studentId}
-              onChange={(event) => updateField('studentId', event.target.value)}
-              className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-              placeholder="123456"
-            />
-            {studentIdError && (
-              <p className="rounded-lg border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
-                {studentIdError}
-              </p>
-            )}
-          </label>
-        </div>
-
-        <ResourceSelect
-          label="Resource"
-          resources={resources}
-          value={form.resourceId}
-          unavailableResourceIds={unavailableTodayResourceIds}
-          resourceLabels={todayResourceLabels}
-          onChange={(resourceId) => {
-            setForm((currentForm) => ({
-              ...currentForm,
-              resourceId,
-              startTime: '',
-              endTime: '',
-            }))
-            setErrorMessage('')
-            setSuccessMessage('')
-          }}
-        />
-
-        {selectedResource && (
-          <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-950 ring-1 ring-blue-100 transition-colors duration-300 ease-in-out dark:bg-blue-950 dark:text-blue-100 dark:ring-blue-900">
-            <p className="font-semibold">{selectedResource.name}</p>
-            <p className="mt-1 leading-6">
-              {selectedResource.location}
-              <span className="mx-2 text-blue-300 dark:text-blue-700">|</span>
-              Capacity {selectedResource.capacity}
+        <section className="space-y-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+              Student Details
             </p>
-            <p>
-              Open {selectedResource.openingTime} -{' '}
-              {selectedResource.closingTime}
-            </p>
+            <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+              Who is making this booking?
+            </h2>
           </div>
-        )}
 
-        <section className="mt-8 space-y-4 border-t border-slate-200 pt-6 transition-colors duration-300 ease-in-out dark:border-slate-800">
+          <div className="grid gap-5 md:grid-cols-2">
+            <label className="space-y-2">
+              <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Student Name
+              </span>
+              <input
+                type="text"
+                value={form.studentName}
+                onChange={(event) =>
+                  updateField('studentName', event.target.value)
+                }
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+                placeholder="Zakarya Aqlan"
+              />
+              {studentNameError && (
+                <p className="rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
+                  {studentNameError}
+                </p>
+              )}
+            </label>
+
+            <label className="space-y-2">
+              <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Student ID
+              </span>
+              <input
+                type="text"
+                value={form.studentId}
+                onChange={(event) =>
+                  updateField('studentId', event.target.value)
+                }
+                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+                placeholder="085953"
+              />
+              {studentIdError && (
+                <p className="rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
+                  {studentIdError}
+                </p>
+              )}
+            </label>
+          </div>
+        </section>
+
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition-colors duration-300 ease-in-out sm:p-5 dark:border-slate-800 dark:bg-slate-950/60">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+              Resource and Availability
+            </p>
+            <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+              Choose a place and time
+            </h2>
+          </div>
+
+          <ResourceSelect
+            label="Resource"
+            resources={resources}
+            value={form.resourceId}
+            unavailableResourceIds={unavailableTodayResourceIds}
+            resourceLabels={todayResourceLabels}
+            onChange={(resourceId) => {
+              setForm((currentForm) => ({
+                ...currentForm,
+                resourceId,
+                startTime: '',
+                endTime: '',
+              }))
+              setErrorMessage('')
+              setSuccessMessage('')
+            }}
+          />
+
+          {selectedResource && (
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-950 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+              <p className="font-semibold">{selectedResource.name}</p>
+              <p className="mt-1 leading-6">
+                {selectedResource.location}
+                <span className="mx-2 text-blue-300 dark:text-blue-700">|</span>
+                Capacity {selectedResource.capacity}
+              </p>
+              <p>
+                Open {selectedResource.openingTime} -{' '}
+                {selectedResource.closingTime}
+              </p>
+            </div>
+          )}
+
+          <section className="space-y-4 border-t border-slate-200 pt-5 transition-colors duration-300 ease-in-out dark:border-slate-800">
           <DatePicker
             label="Date"
             value={form.date}
@@ -405,7 +428,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             onChange={(date) => updateField('date', date)}
           />
           {todayIsNoLongerBookable && (
-            <p className="rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
               Bookings for today are no longer available. Please choose another
               date.
             </p>
@@ -427,33 +450,34 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               updateField('endTime', endTime)
             }}
           />
+          </section>
         </section>
 
         <label className="space-y-2">
-          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+          <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
             Purpose
           </span>
           <textarea
             value={form.purpose}
             onChange={(event) => updateField('purpose', event.target.value)}
-            className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+            className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
             placeholder="Briefly explain why you need this resource."
           />
           {purposeError && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
+            <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:bg-red-950 dark:text-red-300">
               {purposeError}
             </p>
           )}
         </label>
 
         {errorMessage && (
-          <p className="whitespace-pre-line rounded-lg border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:bg-red-950 dark:text-red-300">
+          <p className="whitespace-pre-line rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
             {errorMessage}
           </p>
         )}
 
         {successMessage && (
-          <p className="rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:bg-green-950 dark:text-green-300">
+          <p className="rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
             {successMessage}
           </p>
         )}
@@ -466,17 +490,20 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         </button>
       </form>
 
-      <aside className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
+      <aside className="rounded-2xl border border-white/70 bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800">
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+          Summary
+        </p>
+        <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
           Booking Summary
         </h2>
 
         {confirmedBooking && selectedResource ? (
           <>
-            <p className="mt-4 rounded-lg border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:bg-green-950 dark:text-green-300">
+            <p className="mt-4 rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
               Booking confirmed successfully!
             </p>
-            <dl className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-400">
+            <dl className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
                   Resource
@@ -521,7 +548,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Link
                 to="/"
-                className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
+                className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-blue-900 dark:hover:bg-blue-950 dark:hover:text-blue-300 dark:focus:ring-blue-900"
               >
                 Go to Dashboard
               </Link>
