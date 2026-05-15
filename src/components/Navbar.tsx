@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import nexbookLogo from '../assets/nexbook-logo.svg'
 
 const links = [
   { label: 'Dashboard', path: '/' },
@@ -80,10 +81,20 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950/90">
-      <nav className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[2.5rem_1fr_2.5rem] lg:px-8">
-        <div aria-hidden="true" className="hidden h-10 w-10 lg:block" />
+      <nav className="mx-auto grid max-w-7xl grid-cols-[auto_auto] items-center gap-3 px-4 py-3 sm:px-6 lg:grid-cols-[2.75rem_1fr_2.75rem] lg:px-8">
+        <NavLink
+          to="/"
+          aria-label="NexBook home"
+          className="inline-flex h-11 w-11 items-center justify-center justify-self-start rounded-2xl border border-white/70 bg-white shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800 dark:focus:ring-blue-900"
+        >
+          <img
+            src={nexbookLogo}
+            alt="NexBook"
+            className="h-9 w-9 object-contain"
+          />
+        </NavLink>
 
-        <div className="flex justify-center">
+        <div className="col-span-2 flex justify-center lg:col-span-1 lg:col-start-2 lg:row-start-1">
           <div className="flex max-w-full flex-wrap justify-center gap-1.5 rounded-2xl border border-white/70 bg-white p-1.5 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800">
             {links.map((link) => (
               <NavLink
@@ -103,7 +114,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <div className="flex justify-center lg:justify-end">
+        <div className="flex justify-end lg:col-start-3 lg:row-start-1">
           <button
             type="button"
             onClick={toggleTheme}
