@@ -124,28 +124,24 @@ export function Dashboard() {
             label="Total Resources"
             value={resources.length}
             helperText="Available campus spaces and equipment"
-            marker="R"
             accent="blue"
           />
           <StatCard
             label="Active Bookings"
             value={activeBookings.length}
             helperText="Current and upcoming non-cancelled bookings"
-            marker="A"
             accent="emerald"
           />
           <StatCard
             label="Cancelled Bookings"
             value={cancelledBookings.length}
             helperText="Bookings cancelled by students"
-            marker="C"
-            accent="amber"
+            accent="red"
           />
           <StatCard
             label="Upcoming Bookings"
             value={upcomingBookings.length}
             helperText="Bookings scheduled for later"
-            marker="U"
             accent="indigo"
           />
         </div>
