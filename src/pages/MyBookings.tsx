@@ -439,6 +439,8 @@ export function MyBookings() {
             const bookingGroup = getBookingGroup(booking)
             const isEditing = editingBookingId === booking.id
             const isSameDayBooking = booking.date === todayDate
+            const isFutureActiveBooking =
+              bookingGroup === 'Active' && !isSameDayBooking
             const remainingEdits = getRemainingEdits(booking)
 
             return (
@@ -448,14 +450,10 @@ export function MyBookings() {
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
                   displayStatus={getDisplayStatus(booking)}
-                  canEdit={
-                    bookingGroup === 'Active' &&
-                    !isSameDayBooking &&
-                    remainingEdits > 0
-                  }
+                  canEdit={isFutureActiveBooking && remainingEdits > 0}
                   canCancel={bookingGroup === 'Active'}
                   remainingEdits={
-                    bookingGroup === 'Active' ? remainingEdits : undefined
+                    isFutureActiveBooking ? remainingEdits : undefined
                   }
                   onCancel={handleCancelBooking}
                   onEdit={startEditing}
