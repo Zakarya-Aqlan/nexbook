@@ -8,7 +8,7 @@ export function FinalEditWarningModal({
   onKeepEditing,
 }: FinalEditWarningModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm transition-colors duration-300 ease-in-out">
+    <div className="fixed inset-0 z-50 flex min-h-dvh items-center justify-center overflow-y-auto overscroll-contain bg-slate-950/60 px-4 py-6 backdrop-blur-sm transition-colors duration-300 ease-in-out">
       <section
         aria-labelledby="final-edit-warning-title"
         aria-modal="true"
