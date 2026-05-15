@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Resource } from '../types'
 
+type ResourceSelectLabelTone = 'neutral' | 'warning' | 'success'
+
+export type ResourceSelectLabels = Record<
+  string,
+  {
+    text: string
+    tone?: ResourceSelectLabelTone
+  }
+>
+
 type ResourceSelectProps = {
   label: string
   resources: Resource[]
@@ -9,6 +19,7 @@ type ResourceSelectProps = {
   placeholder?: string
   unavailableResourceIds?: string[]
   unavailableLabel?: string
+  resourceLabels?: ResourceSelectLabels
 }
 
 function ChevronIcon({ isOpen }: { isOpen: boolean }) {
@@ -30,6 +41,21 @@ function ChevronIcon({ isOpen }: { isOpen: boolean }) {
   )
 }
 
+const selectedLabelStyles: Record<ResourceSelectLabelTone, string> = {
+  neutral: 'text-slate-500 dark:text-slate-400',
+  warning: 'text-amber-700 dark:text-amber-400',
+  success: 'text-green-700 dark:text-green-400',
+}
+
+const optionBadgeStyles: Record<ResourceSelectLabelTone, string> = {
+  neutral:
+    'bg-slate-100 text-slate-600 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700',
+  warning:
+    'bg-amber-50 text-amber-700 ring-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-900',
+  success:
+    'bg-green-50 text-green-700 ring-green-100 dark:bg-green-950 dark:text-green-400 dark:ring-green-900',
+}
+
 export function ResourceSelect({
   label,
   resources,
@@ -38,13 +64,25 @@ export function ResourceSelect({
   placeholder = 'Choose a resource',
   unavailableResourceIds = [],
   unavailableLabel = 'Unavailable today',
+  resourceLabels = {},
 }: ResourceSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const selectedResource = resources.find((resource) => resource.id === value)
   const unavailableResourceSet = new Set(unavailableResourceIds)
-  const selectedResourceUnavailable =
-    selectedResource && unavailableResourceSet.has(selectedResource.id)
+  const selectedResourceLabel = selectedResource
+    ? getResourceLabel(selectedResource.id)
+    : undefined
+  const selectedResourceLabelTone = selectedResourceLabel?.tone ?? 'neutral'
+
+  function getResourceLabel(resourceId: string) {
+    return (
+      resourceLabels[resourceId] ??
+      (unavailableResourceSet.has(resourceId)
+        ? { text: unavailableLabel, tone: 'warning' as const }
+        : undefined)
+    )
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -104,9 +142,11 @@ export function ResourceSelect({
           >
             {selectedResource?.name ?? placeholder}
           </span>
-          {selectedResourceUnavailable && (
-            <span className="mt-0.5 block text-xs font-semibold text-amber-700 dark:text-amber-400">
-              {unavailableLabel}
+          {selectedResourceLabel && (
+            <span
+              className={`mt-0.5 block truncate text-xs font-semibold ${selectedLabelStyles[selectedResourceLabelTone]}`}
+            >
+              {selectedResourceLabel.text}
             </span>
           )}
         </span>
@@ -123,6 +163,8 @@ export function ResourceSelect({
           {resources.map((resource) => {
             const isSelected = resource.id === value
             const isUnavailable = unavailableResourceSet.has(resource.id)
+            const resourceLabel = getResourceLabel(resource.id)
+            const resourceLabelTone = resourceLabel?.tone ?? 'neutral'
 
             return (
               <button
@@ -142,9 +184,15 @@ export function ResourceSelect({
               >
                 <span className="flex items-center justify-between gap-2">
                   <span className="block font-semibold">{resource.name}</span>
-                  {isUnavailable && (
-                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 ring-1 ring-amber-100 dark:bg-amber-950 dark:text-amber-400 dark:ring-amber-900">
-                      {unavailableLabel}
+                  {resourceLabel && (
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${
+                        isSelected
+                          ? 'bg-white/20 text-white ring-white/30'
+                          : optionBadgeStyles[resourceLabelTone]
+                      }`}
+                    >
+                      {resourceLabel.text}
                     </span>
                   )}
                 </span>

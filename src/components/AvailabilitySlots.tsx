@@ -1,6 +1,8 @@
 import type { Resource } from '../types'
 import {
   getAvailabilitySlots,
+  getDurationHourLabel,
+  minimumBookingDuration,
   timeToMinutes,
 } from '../utils/availabilityUtils'
 import { getBookings } from '../utils/storage'
@@ -99,6 +101,10 @@ export function AvailabilitySlots({
   const hasCurrentSlot = visibleSlots.some((slot) =>
     isCurrentSlot(slot.start, slot.endLabel),
   )
+  const noSlotsMessage =
+    duration === minimumBookingDuration
+      ? `No ${getDurationHourLabel(duration)} slots left for this resource. Try another date or resource.`
+      : `No ${getDurationHourLabel(duration)} slots left for this resource. Try a shorter duration or another date.`
 
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900">
@@ -149,8 +155,7 @@ export function AvailabilitySlots({
 
       {visibleSlots.length === 0 || (!hasAnyAvailable && !hasCurrentSlot) ? (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-center text-xs text-slate-500 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
-          No available slots for this duration. Try a shorter duration or
-          another date.
+          {noSlotsMessage}
         </p>
       ) : (
         <div className="flex flex-wrap gap-1.5">

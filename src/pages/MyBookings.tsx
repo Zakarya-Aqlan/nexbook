@@ -9,9 +9,11 @@ import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
+  getAvailableSlotCount,
+  getDurationHourLabel,
   getNoRemainingTodayError,
   getPastSameDayTimeError,
-  hasAvailableSlotForResource,
+  minimumBookingDuration,
   timeToMinutes,
 } from '../utils/availabilityUtils'
 import {
@@ -23,6 +25,7 @@ import {
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
+import type { ResourceSelectLabels } from '../components/ResourceSelect'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
 
@@ -76,6 +79,46 @@ function getPurposeError(purpose: string) {
   }
 
   return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
+}
+
+function getSlotWord(count: number) {
+  return count === 1 ? 'slot' : 'slots'
+}
+
+function getTodayResourceLabel(
+  minimumSlotCount: number,
+  selectedDurationSlotCount: number,
+  selectedDuration: number,
+): ResourceSelectLabels[string] {
+  if (minimumSlotCount === 0) {
+    return { text: 'Unavailable today', tone: 'warning' }
+  }
+
+  if (
+    selectedDuration > minimumBookingDuration &&
+    selectedDurationSlotCount === 0
+  ) {
+    return {
+      text: `No ${getDurationHourLabel(selectedDuration)} slots left`,
+      tone: 'warning',
+    }
+  }
+
+  if (minimumSlotCount <= 2) {
+    return {
+      text: `Closing soon · ${minimumSlotCount} ${getSlotWord(
+        minimumSlotCount,
+      )} left`,
+      tone: 'warning',
+    }
+  }
+
+  return {
+    text: `${selectedDurationSlotCount} ${getSlotWord(
+      selectedDurationSlotCount,
+    )} available`,
+    tone: 'success',
+  }
 }
 
 function getRemainingEdits(booking: Booking) {
@@ -144,23 +187,47 @@ export function MyBookings() {
     (resource) => resource.id === editForm.resourceId,
   )
   const editSelectedDateIsToday = editForm.date === todayDate
-  const editUnavailableTodayResourceIds = editSelectedDateIsToday
-    ? resources
-        .filter(
-          (resource) =>
-            !hasAvailableSlotForResource({
-              resource,
-              date: editForm.date,
-              duration: editDuration,
-              bookings,
-              excludeBookingId: editingBookingId || undefined,
-            }),
-        )
-        .map((resource) => resource.id)
+  const editExcludeBookingId = editingBookingId || undefined
+  const editTodayResourceAvailability = editSelectedDateIsToday
+    ? resources.map((resource) => ({
+        resourceId: resource.id,
+        minimumSlotCount: getAvailableSlotCount({
+          resource,
+          date: editForm.date,
+          duration: minimumBookingDuration,
+          bookings,
+          excludeBookingId: editExcludeBookingId,
+        }),
+        selectedDurationSlotCount: getAvailableSlotCount({
+          resource,
+          date: editForm.date,
+          duration: editDuration,
+          bookings,
+          excludeBookingId: editExcludeBookingId,
+        }),
+      }))
     : []
+  const editUnavailableTodayResourceIds = editTodayResourceAvailability
+    .filter(({ minimumSlotCount }) => minimumSlotCount === 0)
+    .map(({ resourceId }) => resourceId)
+  const editTodayResourceLabels =
+    editTodayResourceAvailability.reduce<ResourceSelectLabels>(
+      (labels, resourceAvailability) => ({
+        ...labels,
+        [resourceAvailability.resourceId]: getTodayResourceLabel(
+          resourceAvailability.minimumSlotCount,
+          resourceAvailability.selectedDurationSlotCount,
+          editDuration,
+        ),
+      }),
+      {},
+    )
   const editTodayIsNoLongerBookable =
     editSelectedDateIsToday &&
-    editUnavailableTodayResourceIds.length === resources.length
+    editTodayResourceAvailability.length > 0 &&
+    editTodayResourceAvailability.every(
+      ({ minimumSlotCount }) => minimumSlotCount === 0,
+    )
   const editMinBookingDate = todayDate
 
   function refreshBookings() {
@@ -347,7 +414,6 @@ export function MyBookings() {
         selectedResource,
         updatedBooking.date,
         bookings,
-        editDuration,
         updatedBooking.id,
       ) ||
       hasBookingConflict(updatedBooking, otherBookings)
@@ -493,6 +559,7 @@ export function MyBookings() {
                       resources={resources}
                       value={editForm.resourceId}
                       unavailableResourceIds={editUnavailableTodayResourceIds}
+                      resourceLabels={editTodayResourceLabels}
                       onChange={(resourceId) => {
                         setEditForm((currentForm) => ({
                           ...currentForm,

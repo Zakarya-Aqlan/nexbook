@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import {
+  getAvailableSlotCount,
+  getDurationHourLabel,
   getNoRemainingTodayError,
   getPastSameDayTimeError,
-  hasAvailableSlotForResource,
+  minimumBookingDuration,
 } from '../utils/availabilityUtils'
 import {
   getDurationError,
@@ -19,6 +21,7 @@ import { addBooking, getBookings } from '../utils/storage'
 import { AvailabilitySlots } from './AvailabilitySlots'
 import { DatePicker } from './DatePicker'
 import { ResourceSelect } from './ResourceSelect'
+import type { ResourceSelectLabels } from './ResourceSelect'
 import { SameDayBookingModal } from './SameDayBookingModal'
 
 type BookingFormProps = {
@@ -69,6 +72,46 @@ function getPurposeError(purpose: string) {
   return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
 }
 
+function getSlotWord(count: number) {
+  return count === 1 ? 'slot' : 'slots'
+}
+
+function getTodayResourceLabel(
+  minimumSlotCount: number,
+  selectedDurationSlotCount: number,
+  selectedDuration: number,
+): ResourceSelectLabels[string] {
+  if (minimumSlotCount === 0) {
+    return { text: 'Unavailable today', tone: 'warning' }
+  }
+
+  if (
+    selectedDuration > minimumBookingDuration &&
+    selectedDurationSlotCount === 0
+  ) {
+    return {
+      text: `No ${getDurationHourLabel(selectedDuration)} slots left`,
+      tone: 'warning',
+    }
+  }
+
+  if (minimumSlotCount <= 2) {
+    return {
+      text: `Closing soon · ${minimumSlotCount} ${getSlotWord(
+        minimumSlotCount,
+      )} left`,
+      tone: 'warning',
+    }
+  }
+
+  return {
+    text: `${selectedDurationSlotCount} ${getSlotWord(
+      selectedDurationSlotCount,
+    )} available`,
+    tone: 'success',
+  }
+}
+
 export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [form, setForm] = useState<BookingFormValues>(emptyForm)
   const [errorMessage, setErrorMessage] = useState('')
@@ -94,22 +137,44 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   )
   const savedBookings = getBookings()
   const selectedDateIsToday = form.date === getTodayDate()
-  const unavailableTodayResourceIds = selectedDateIsToday
-    ? resources
-        .filter(
-          (resource) =>
-            !hasAvailableSlotForResource({
-              resource,
-              date: form.date,
-              duration: selectedDuration,
-              bookings: savedBookings,
-            }),
-        )
-        .map((resource) => resource.id)
+  const todayResourceAvailability = selectedDateIsToday
+    ? resources.map((resource) => ({
+        resourceId: resource.id,
+        minimumSlotCount: getAvailableSlotCount({
+          resource,
+          date: form.date,
+          duration: minimumBookingDuration,
+          bookings: savedBookings,
+        }),
+        selectedDurationSlotCount: getAvailableSlotCount({
+          resource,
+          date: form.date,
+          duration: selectedDuration,
+          bookings: savedBookings,
+        }),
+      }))
     : []
+  const unavailableTodayResourceIds = todayResourceAvailability
+    .filter(({ minimumSlotCount }) => minimumSlotCount === 0)
+    .map(({ resourceId }) => resourceId)
+  const todayResourceLabels =
+    todayResourceAvailability.reduce<ResourceSelectLabels>(
+      (labels, resourceAvailability) => ({
+        ...labels,
+        [resourceAvailability.resourceId]: getTodayResourceLabel(
+          resourceAvailability.minimumSlotCount,
+          resourceAvailability.selectedDurationSlotCount,
+          selectedDuration,
+        ),
+      }),
+      {},
+    )
   const todayIsNoLongerBookable =
     selectedDateIsToday &&
-    unavailableTodayResourceIds.length === resources.length
+    todayResourceAvailability.length > 0 &&
+    todayResourceAvailability.every(
+      ({ minimumSlotCount }) => minimumSlotCount === 0,
+    )
   const minBookingDate = getTodayDate()
 
   const studentNameError = getStudentNameError(form.studentName)
@@ -225,7 +290,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         selectedResource,
         newBooking.date,
         existingBookings,
-        selectedDuration,
       ) ||
       hasBookingConflict(newBooking, existingBookings)
 
@@ -305,6 +369,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           resources={resources}
           value={form.resourceId}
           unavailableResourceIds={unavailableTodayResourceIds}
+          resourceLabels={todayResourceLabels}
           onChange={(resourceId) => {
             setForm((currentForm) => ({
               ...currentForm,

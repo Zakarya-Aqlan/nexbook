@@ -121,13 +121,33 @@ export function hasAvailableSlotForResource({
   bookings,
   excludeBookingId,
 }: ResourceAvailabilityOptions) {
+  return getAvailableSlotCount({
+    resource,
+    date,
+    duration,
+    bookings,
+    excludeBookingId,
+  }) > 0
+}
+
+export function getAvailableSlotCount({
+  resource,
+  date,
+  duration,
+  bookings,
+  excludeBookingId,
+}: ResourceAvailabilityOptions) {
   return getAvailabilitySlots({
     resource,
     date,
     duration,
     bookings,
     excludeBookingId,
-  }).some((slot) => !slot.unavailable)
+  }).filter((slot) => !slot.unavailable).length
+}
+
+export function getDurationHourLabel(duration: number) {
+  return `${duration / 60}-hour`
 }
 
 export function hasAvailableSlotForResourceToday(
@@ -157,7 +177,6 @@ export function getNoRemainingTodayError(
   resource: Resource,
   date: string,
   bookings: Booking[],
-  duration = minimumBookingDuration,
   excludeBookingId?: string,
 ) {
   if (
@@ -165,7 +184,7 @@ export function getNoRemainingTodayError(
     !hasAvailableSlotForResource({
       resource,
       date,
-      duration,
+      duration: minimumBookingDuration,
       bookings,
       excludeBookingId,
     })
