@@ -293,6 +293,21 @@ export function MyBookings() {
       return
     }
 
+    const hasEditChanges =
+      bookingToEdit.resourceId !== editForm.resourceId ||
+      bookingToEdit.date !== editForm.date ||
+      bookingToEdit.startTime !== editForm.startTime ||
+      bookingToEdit.endTime !== editForm.endTime ||
+      bookingToEdit.purpose !== editForm.purpose.trim()
+
+    if (!hasEditChanges) {
+      setMessage('')
+      setErrorMessage(
+        'No changes detected. Please update at least one field before saving.',
+      )
+      return
+    }
+
     if (!selectedResource) {
       setErrorMessage('Please choose a valid resource.')
       return
@@ -512,6 +527,15 @@ export function MyBookings() {
                         resource={selectedResource}
                         date={editForm.date}
                         excludeBookingId={editingBookingId}
+                        currentSlot={
+                          editForm.resourceId === booking.resourceId &&
+                          editForm.date === booking.date
+                            ? {
+                                startTime: booking.startTime,
+                                endTime: booking.endTime,
+                              }
+                            : undefined
+                        }
                         duration={editDuration}
                         selectedStartTime={editForm.startTime}
                         selectedEndTime={editForm.endTime}

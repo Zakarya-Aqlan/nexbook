@@ -15,6 +15,10 @@ type AvailabilitySlotsProps = {
   resource: Resource | undefined
   date: string
   excludeBookingId?: string
+  currentSlot?: {
+    startTime: string
+    endTime: string
+  }
   duration: number
   selectedStartTime?: string
   selectedEndTime?: string
@@ -26,6 +30,7 @@ export function AvailabilitySlots({
   resource,
   date,
   excludeBookingId,
+  currentSlot,
   duration,
   selectedStartTime,
   selectedEndTime,
@@ -84,7 +89,16 @@ export function AvailabilitySlots({
     excludeBookingId,
   })
 
-  const hasAnyAvailable = visibleSlots.some((slot) => !slot.unavailable)
+  function isCurrentSlot(start: string, end: string) {
+    return currentSlot?.startTime === start && currentSlot.endTime === end
+  }
+
+  const hasAnyAvailable = visibleSlots.some(
+    (slot) => !slot.unavailable && !isCurrentSlot(slot.start, slot.endLabel),
+  )
+  const hasCurrentSlot = visibleSlots.some((slot) =>
+    isCurrentSlot(slot.start, slot.endLabel),
+  )
 
   return (
     <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900">
@@ -133,7 +147,7 @@ export function AvailabilitySlots({
         Availability for {date}
       </p>
 
-      {visibleSlots.length === 0 || !hasAnyAvailable ? (
+      {visibleSlots.length === 0 || (!hasAnyAvailable && !hasCurrentSlot) ? (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-center text-xs text-slate-500 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
           No available slots for this duration. Try a shorter duration or
           another date.
@@ -142,8 +156,23 @@ export function AvailabilitySlots({
         <div className="flex flex-wrap gap-1.5">
           {visibleSlots.map(
             ({ start, endLabel, unavailable, unavailableReason }) => {
+              const isOriginalSlot = isCurrentSlot(start, endLabel)
               const isSelected =
                 start === selectedStartTime && endLabel === selectedEndTime
+
+              if (isOriginalSlot) {
+                return (
+                  <span
+                    key={start}
+                    className="flex flex-col items-center rounded border border-slate-300 bg-slate-100 px-2 py-1 text-xs text-slate-500 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                  >
+                    <span>
+                      {start}-{endLabel}
+                    </span>
+                    <span className="text-[10px] leading-none">Current</span>
+                  </span>
+                )
+              }
 
               if (unavailable) {
                 return (
@@ -200,7 +229,9 @@ export function AvailabilitySlots({
         </div>
       )}
 
-      {selectedStartTime && selectedEndTime && (
+      {selectedStartTime &&
+        selectedEndTime &&
+        !isCurrentSlot(selectedStartTime, selectedEndTime) && (
         <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-100 transition-colors duration-300 ease-in-out dark:bg-blue-950 dark:text-blue-200 dark:ring-blue-900">
           Selected Time: {selectedStartTime} - {selectedEndTime}
         </p>
