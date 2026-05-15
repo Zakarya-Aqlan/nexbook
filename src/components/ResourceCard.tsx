@@ -13,17 +13,17 @@ const typeBadgeStyles: Record<ResourceType, string> = {
 }
 
 const typeAccentBars: Record<ResourceType, string> = {
-  room: 'from-blue-500 to-cyan-400',
-  lab: 'from-indigo-500 to-blue-500',
-  equipment: 'from-amber-500 to-orange-400',
-  sports: 'from-emerald-500 to-teal-400',
+  room: 'bg-blue-500',
+  lab: 'bg-indigo-500',
+  equipment: 'bg-amber-500',
+  sports: 'bg-emerald-500',
 }
 
 export function ResourceCard({ resource }: ResourceCardProps) {
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/70 bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-md sm:p-6 dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800">
       <div
-        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${typeAccentBars[resource.type]}`}
+        className={`absolute inset-x-0 top-0 h-1 ${typeAccentBars[resource.type]}`}
       />
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
