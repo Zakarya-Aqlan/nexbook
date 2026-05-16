@@ -119,10 +119,10 @@ export function Navbar() {
             type="button"
             onClick={toggleTheme}
             aria-label={
-              theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+              theme === 'dark' ? 'Use light mode' : 'Use dark mode'
             }
             title={
-              theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+              theme === 'dark' ? 'Use light mode' : 'Use dark mode'
             }
             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/70 bg-white text-slate-700 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-100 dark:ring-slate-800 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:ring-blue-900"
           >

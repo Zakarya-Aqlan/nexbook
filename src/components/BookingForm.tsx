@@ -53,7 +53,7 @@ function getStudentNameError(studentName: string) {
     return ''
   }
 
-  return 'Student Name must contain English letters and spaces only.'
+  return 'Student name: use letters and spaces only.'
 }
 
 function getStudentIdError(studentId: string) {
@@ -61,7 +61,7 @@ function getStudentIdError(studentId: string) {
     return ''
   }
 
-  return 'Student ID must contain numbers only.'
+  return 'Student ID: use numbers only.'
 }
 
 function getPurposeError(purpose: string) {
@@ -69,7 +69,7 @@ function getPurposeError(purpose: string) {
     return ''
   }
 
-  return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
+  return 'Purpose: use letters, numbers, spaces, and basic punctuation.'
 }
 
 function getSlotWord(count: number) {
@@ -97,7 +97,7 @@ function getTodayResourceLabel(
 
   if (minimumSlotCount <= 2) {
     return {
-      text: `Closing soon · ${minimumSlotCount} ${getSlotWord(
+      text: `Closing soon - ${minimumSlotCount} ${getSlotWord(
         minimumSlotCount,
       )} left`,
       tone: 'warning',
@@ -197,31 +197,31 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
   function getRequiredFieldError() {
     if (!form.studentName.trim()) {
-      return 'Student name is required.'
+      return 'Enter a student name.'
     }
 
     if (!form.studentId.trim()) {
-      return 'Student ID is required.'
+      return 'Enter a student ID.'
     }
 
     if (!form.resourceId) {
-      return 'Please choose a resource.'
+      return 'Choose a resource.'
     }
 
     if (!form.date) {
-      return 'Booking date is required.'
+      return 'Choose a date.'
     }
 
     if (!form.startTime) {
-      return 'Start time is required.'
+      return 'Choose a start time.'
     }
 
     if (!form.endTime) {
-      return 'End time is required.'
+      return 'Choose an end time.'
     }
 
     if (!form.purpose.trim()) {
-      return 'Purpose is required.'
+      return 'Enter a purpose.'
     }
 
     return null
@@ -230,7 +230,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   function saveBooking(booking: Booking) {
     addBooking(booking)
     setConfirmedBooking(booking)
-    setSuccessMessage('Booking request saved successfully.')
+    setSuccessMessage('Booking saved.')
     setErrorMessage('')
     setPendingSameDayBooking(null)
   }
@@ -255,7 +255,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     }
 
     if (!selectedResource) {
-      setErrorMessage('Please choose a valid resource.')
+      setErrorMessage('Choose a valid resource.')
       setSuccessMessage('')
       setConfirmedBooking(null)
       return
@@ -327,17 +327,17 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         <section className="space-y-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Student Details
+              Student details
             </p>
             <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
-              Who is making this booking?
+              Student information
             </h2>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
             <label className="space-y-2">
               <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Student Name
+                Student name
               </span>
               <input
                 type="text"
@@ -380,10 +380,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         <section className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition-colors duration-300 ease-in-out sm:p-5 dark:border-slate-800 dark:bg-slate-950/60">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Resource and Availability
+              Resource and availability
             </p>
             <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
-              Choose a place and time
+              Choose a resource and time
             </h2>
           </div>
 
@@ -429,13 +429,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           />
           {todayIsNoLongerBookable && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
-              Bookings for today are no longer available. Please choose another
-              date.
+              No bookings are available today. Choose another date.
             </p>
           )}
           <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Select a date first, then choose one of the available time slots
-            below.
+            Select a date to view available slots.
           </p>
 
           <AvailabilitySlots
@@ -461,7 +459,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             value={form.purpose}
             onChange={(event) => updateField('purpose', event.target.value)}
             className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-            placeholder="Briefly explain why you need this resource."
+            placeholder="Briefly explain the booking purpose."
           />
           {purposeError && (
             <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:bg-red-950 dark:text-red-300">
@@ -486,7 +484,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           type="submit"
           className="min-h-11 w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 md:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
         >
-          Submit Booking
+          Submit booking
         </button>
       </form>
 
@@ -495,13 +493,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           Summary
         </p>
         <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
-          Booking Summary
+          Booking summary
         </h2>
 
         {confirmedBooking && selectedResource ? (
           <>
             <p className="mt-4 rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
-              Booking confirmed successfully!
+              Booking confirmed.
             </p>
             <dl className="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
               <div>
@@ -520,7 +518,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               </div>
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Date and Time
+                  Date and time
                 </dt>
                 <dd>
                   {confirmedBooking.date}, {confirmedBooking.startTime} -{' '}
@@ -542,27 +540,27 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             </dl>
             <p className="mt-5 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
               {confirmedBooking.date === getTodayDate()
-                ? 'This is a same-day booking, so editing is disabled after submission. You can still cancel it if needed.'
-                : 'Need to make changes? Please edit your booking before the booking date. Same-day bookings cannot be edited.'}
+                ? 'Same-day bookings cannot be edited after submission. You can still cancel this booking.'
+                : 'You can edit future bookings before the booking date. Same-day bookings cannot be edited.'}
             </p>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Link
                 to="/"
                 className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-blue-900 dark:hover:bg-blue-950 dark:hover:text-blue-300 dark:focus:ring-blue-900"
               >
-                Go to Dashboard
+                Go to dashboard
               </Link>
               <Link
                 to="/my-bookings"
                 className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
               >
-                View My Bookings
+                View my bookings
               </Link>
             </div>
           </>
         ) : (
           <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
-            Submit a valid booking to see the confirmation details here.
+            Submit a valid booking to see details here.
           </p>
         )}
       </aside>

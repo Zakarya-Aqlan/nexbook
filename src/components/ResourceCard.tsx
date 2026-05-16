@@ -52,7 +52,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
         </div>
         <div>
           <dt className="font-semibold text-slate-900 dark:text-slate-100">
-            Opening Hours
+            Hours
           </dt>
           <dd>
             {resource.openingTime} - {resource.closingTime}
@@ -68,7 +68,7 @@ export function ResourceCard({ resource }: ResourceCardProps) {
         to={`/book/${resource.id}`}
         className="mt-6 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
       >
-        Book Now
+        Book now
       </Link>
     </article>
   )

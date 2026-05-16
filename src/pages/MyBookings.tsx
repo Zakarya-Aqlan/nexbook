@@ -78,7 +78,7 @@ function getPurposeError(purpose: string) {
     return ''
   }
 
-  return 'Purpose can only use English letters, numbers, spaces, and basic punctuation.'
+  return 'Purpose: use letters, numbers, spaces, and basic punctuation.'
 }
 
 function getSlotWord(count: number) {
@@ -106,7 +106,7 @@ function getTodayResourceLabel(
 
   if (minimumSlotCount <= 2) {
     return {
-      text: `Closing soon · ${minimumSlotCount} ${getSlotWord(
+      text: `Closing soon - ${minimumSlotCount} ${getSlotWord(
         minimumSlotCount,
       )} left`,
       tone: 'warning',
@@ -278,7 +278,7 @@ export function MyBookings() {
     cancelBooking(bookingId)
     refreshBookings()
     setEditingBookingId('')
-    setMessage('Booking cancelled successfully.')
+    setMessage('Booking cancelled.')
     setErrorMessage('')
     setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
@@ -287,23 +287,23 @@ export function MyBookings() {
 
   function getEditRequiredError() {
     if (!editForm.resourceId) {
-      return 'Please choose a resource.'
+      return 'Choose a resource.'
     }
 
     if (!editForm.date) {
-      return 'Booking date is required.'
+      return 'Choose a date.'
     }
 
     if (!editForm.startTime) {
-      return 'Start time is required.'
+      return 'Choose a start time.'
     }
 
     if (!editForm.endTime) {
-      return 'End time is required.'
+      return 'Choose an end time.'
     }
 
     if (!editForm.purpose.trim()) {
-      return 'Purpose is required.'
+      return 'Enter a purpose.'
     }
 
     return null
@@ -327,11 +327,11 @@ export function MyBookings() {
     stopEditing()
     setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
-    setMessage('Booking updated successfully.')
+    setMessage('Booking updated.')
     setErrorMessage('')
     setToastMessage(
       nextRemainingEdits === 1
-        ? 'Booking updated. You have 1 edit left.'
+        ? 'Booking updated. 1 edit left.'
         : 'Booking updated. No edits left for this booking.',
     )
   }
@@ -344,7 +344,7 @@ export function MyBookings() {
     )
 
     if (!bookingToEdit) {
-      setErrorMessage('Booking could not be found.')
+      setErrorMessage('Booking not found.')
       return
     }
 
@@ -370,13 +370,13 @@ export function MyBookings() {
     if (!hasEditChanges) {
       setMessage('')
       setErrorMessage(
-        'No changes detected. Please update at least one field before saving.',
+        'No changes to save.',
       )
       return
     }
 
     if (!selectedResource) {
-      setErrorMessage('Please choose a valid resource.')
+      setErrorMessage('Choose a valid resource.')
       return
     }
 
@@ -476,14 +476,13 @@ export function MyBookings() {
               Your Bookings
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
-              Review your booking requests, edit active bookings, or cancel a
-              booking you no longer need.
+              Review, edit, or cancel your campus bookings.
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-slate-950/20 backdrop-blur transition-colors duration-300 ease-in-out">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
-              Booking Snapshot
+              Booking overview
             </p>
             <div className="mt-5 grid grid-cols-3 gap-3">
               {filters.map((filter) => (
@@ -534,12 +533,12 @@ export function MyBookings() {
       {bookings.length === 0 ? (
         <EmptyState
           title="No bookings yet"
-          message="Create a booking first, then it will appear on this page."
+          message="Create a booking to see it here."
         />
       ) : filteredBookings.length === 0 ? (
         <EmptyState
           title={`No ${selectedFilter.toLowerCase()} bookings`}
-          message="Try another filter to view your other bookings."
+          message="Try another filter."
         />
       ) : (
         <section className="space-y-4">
@@ -574,10 +573,10 @@ export function MyBookings() {
                   >
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-                        Edit Mode
+                        Edit mode
                       </p>
                       <h2 className="mt-2 text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
-                        Edit Booking
+                        Edit booking
                       </h2>
                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
                         Student: {booking.studentName} ({booking.studentId})
@@ -611,13 +610,12 @@ export function MyBookings() {
                       />
                       {editTodayIsNoLongerBookable && (
                         <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
-                          Bookings for today are no longer available. Please
-                          choose another date.
+                          No bookings are available today. Choose another date.
                         </p>
                       )}
                       <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                        Pick a new date, then select an available slot. This
-                        booking will not block its own current time.
+                        Pick a date and available slot. This booking does not
+                        block its current time.
                       </p>
 
                       <AvailabilitySlots
@@ -668,7 +666,7 @@ export function MyBookings() {
                         type="submit"
                         className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
                       >
-                        Save Changes
+                        Save changes
                       </button>
                       <button
                         type="button"

@@ -42,7 +42,7 @@ export function AvailabilitySlots({
   if (!resource) {
     return (
       <p className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-center text-xs text-slate-500 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
-        Choose a resource to view availability.
+        Choose a resource to see slots.
       </p>
     )
   }
@@ -50,7 +50,7 @@ export function AvailabilitySlots({
   if (!date) {
     return (
       <p className="rounded-lg border border-dashed border-slate-300 bg-white px-3 py-4 text-center text-xs text-slate-500 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
-        Select a date to view availability.
+        Select a date to see slots.
       </p>
     )
   }
@@ -150,7 +150,7 @@ export function AvailabilitySlots({
       </div>
 
       <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-        Availability for {date}
+        Slots for {date}
       </p>
 
       {visibleSlots.length === 0 || (!hasAnyAvailable && !hasCurrentSlot) ? (
@@ -238,7 +238,7 @@ export function AvailabilitySlots({
         selectedEndTime &&
         !isCurrentSlot(selectedStartTime, selectedEndTime) && (
         <p className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-800 ring-1 ring-blue-100 transition-colors duration-300 ease-in-out dark:bg-blue-950 dark:text-blue-200 dark:ring-blue-900">
-          Selected Time: {selectedStartTime} - {selectedEndTime}
+          Selected time: {selectedStartTime} - {selectedEndTime}
         </p>
       )}
     </div>

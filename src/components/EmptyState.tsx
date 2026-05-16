@@ -4,8 +4,8 @@ type EmptyStateProps = {
 }
 
 export function EmptyState({
-  title = 'No items to show yet',
-  message = 'There is nothing here right now.',
+  title = 'Nothing to show yet',
+  message = 'Check back after you add something.',
 }: EmptyStateProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:py-14 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-800">

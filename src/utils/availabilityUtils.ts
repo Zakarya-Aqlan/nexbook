@@ -167,7 +167,7 @@ export function hasAvailableSlotForResourceToday(
 
 export function getPastSameDayTimeError(date: string, startTime: string) {
   if (isTodayDate(date) && timeToMinutes(startTime) < getCurrentTimeMinutes()) {
-    return 'Booking start time cannot be in the past.'
+    return 'Start time cannot be in the past.'
   }
 
   return null
@@ -189,7 +189,7 @@ export function getNoRemainingTodayError(
       excludeBookingId,
     })
   ) {
-    return 'This resource has no remaining available time today. Please choose another date or resource.'
+    return 'No time remains today for this resource. Choose another date or resource.'
   }
 
   return null

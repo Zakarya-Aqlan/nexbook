@@ -25,8 +25,8 @@ export function FinalEditWarningModal({
           Confirm final edit
         </h2>
         <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
-          This is your final edit for this booking. After this update, you will
-          not be able to edit it again.
+          This is the last edit for this booking. After saving, it cannot be
+          edited again.
         </p>
 
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -35,14 +35,14 @@ export function FinalEditWarningModal({
             onClick={onKeepEditing}
             className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition-colors duration-300 ease-in-out hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-blue-900 dark:hover:bg-slate-800 dark:hover:text-blue-300 dark:focus:ring-blue-900"
           >
-            Keep Editing
+            Keep editing
           </button>
           <button
             type="button"
             onClick={onConfirm}
             className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
           >
-            Confirm Final Edit
+            Confirm final edit
           </button>
         </div>
       </section>

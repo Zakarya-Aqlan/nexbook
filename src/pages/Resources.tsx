@@ -37,40 +37,40 @@ export function Resources() {
               Campus Resources
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
-              Browse study spaces, labs, equipment, and sports facilities with
-              a clearer view of what fits your next campus task.
+              Browse spaces, labs, equipment, and sports facilities for your
+              next task.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/book"
                 className="min-h-11 rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold text-blue-800 shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white/70"
               >
-                Book a Resource
+                Book a resource
               </Link>
               <Link
                 to="/my-bookings"
                 className="min-h-11 rounded-lg border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition-colors duration-300 ease-in-out hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                View My Bookings
+                View my bookings
               </Link>
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-slate-950/20 backdrop-blur transition-colors duration-300 ease-in-out">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
-              Resource Snapshot
+              Resource overview
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-white/10 p-4">
                 <p className="text-3xl font-bold">{resources.length}</p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  total resources
+                  Total
                 </p>
               </div>
               <div className="rounded-xl bg-white/10 p-4">
                 <p className="text-3xl font-bold">{filteredResources.length}</p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  showing now
+                  Showing
                 </p>
               </div>
             </div>
@@ -84,7 +84,7 @@ export function Resources() {
             Browse
           </p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
-            Find the right campus resource
+            Find the right resource
           </h2>
         </div>
 
@@ -112,7 +112,7 @@ export function Resources() {
       {filteredResources.length === 0 ? (
         <EmptyState
           title="No resources found"
-          message="Try another resource type to continue browsing campus options."
+          message="Try another resource type."
         />
       ) : (
         <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">

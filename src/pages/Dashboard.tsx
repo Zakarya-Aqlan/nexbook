@@ -6,12 +6,12 @@ import type { Booking } from '../types'
 import { getBookings } from '../utils/storage'
 
 const dashboardSubtitles = [
-  'Find available campus spaces in seconds.',
-  'Reserve study rooms, labs, and equipment without conflicts.',
-  'Plan your campus bookings with clear real-time availability.',
-  'Choose a resource, pick a time, and confirm your reservation.',
-  'Manage active, cancelled, and completed bookings in one place.',
-  'Book smarter with simple rules and conflict-free scheduling.',
+  'Find available spaces in seconds.',
+  'Book rooms, labs, and equipment without conflicts.',
+  'See clear availability before you reserve.',
+  'Pick a resource, choose a slot, and confirm.',
+  'Manage active, cancelled, and completed bookings.',
+  'Keep campus schedules simple and conflict-free.',
 ]
 
 function getBookingStartDate(booking: Booking) {
@@ -110,20 +110,20 @@ export function Dashboard() {
                 to="/book"
                 className="min-h-11 rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold text-blue-800 shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white/70"
               >
-                Book a Resource
+                Book a resource
               </Link>
               <Link
                 to="/my-bookings"
                 className="min-h-11 rounded-lg border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition-colors duration-300 ease-in-out hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                View My Bookings
+                View my bookings
               </Link>
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-slate-950/20 backdrop-blur transition-colors duration-300 ease-in-out">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
-              Campus Snapshot
+              Campus snapshot
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-white/10 p-4">
@@ -131,7 +131,7 @@ export function Dashboard() {
                   {resources.length}
                 </p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  resources
+                  Resources
                 </p>
               </div>
               <div className="rounded-xl bg-white/10 p-4">
@@ -139,7 +139,7 @@ export function Dashboard() {
                   {activeBookings.length}
                 </p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  active
+                  Active
                 </p>
               </div>
               <div className="col-span-2 rounded-xl bg-white/10 p-4">
@@ -149,7 +149,7 @@ export function Dashboard() {
                 <p className="mt-1 text-sm leading-6 text-blue-50/80">
                   {nextUpcomingBooking
                     ? `${getResourceName(nextUpcomingBooking.resourceId)} is next on your schedule.`
-                    : 'Book a space to start building your campus schedule.'}
+                    : 'Book a space to start your schedule.'}
                 </p>
               </div>
             </div>
@@ -163,32 +163,32 @@ export function Dashboard() {
             Overview
           </p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-            Your campus booking workspace
+            Your booking overview
           </h2>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Total Resources"
             value={resources.length}
-            helperText="Available campus spaces and equipment"
+            helperText="Campus spaces and equipment"
             accent="blue"
           />
           <StatCard
             label="Active Bookings"
             value={activeBookings.length}
-            helperText="Current and upcoming non-cancelled bookings"
+            helperText="Current and upcoming bookings"
             accent="emerald"
           />
           <StatCard
             label="Cancelled Bookings"
             value={cancelledBookings.length}
-            helperText="Bookings cancelled by students"
+            helperText="Cancelled reservations"
             accent="red"
           />
           <StatCard
             label="Upcoming Bookings"
             value={upcomingBookings.length}
-            helperText="Bookings scheduled for later"
+            helperText="Future reservations"
             accent="indigo"
           />
         </div>
@@ -198,12 +198,12 @@ export function Dashboard() {
         <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Next Upcoming Booking
+              Next booking
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
               {nextUpcomingBooking
                 ? getResourceName(nextUpcomingBooking.resourceId)
-                : 'No upcoming booking'}
+                : 'No booking scheduled'}
             </h2>
           </div>
 
@@ -240,10 +240,10 @@ export function Dashboard() {
           ) : (
             <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950">
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                No upcoming booking yet
+                No booking scheduled
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                Book a resource to see your next reservation here.
+                Book a resource to see it here.
               </p>
             </div>
           )}
@@ -255,33 +255,33 @@ export function Dashboard() {
               Quick Actions
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-              Move your booking forward
+              Quick next steps
             </h2>
             <div className="mt-5 flex flex-col gap-3">
               <Link
                 to="/resources"
                 className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
               >
-                View Resources
+                View resources
               </Link>
               <Link
                 to="/book"
                 className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
               >
-                Book a Resource
+                Book a resource
               </Link>
               <Link
                 to="/my-bookings"
                 className="min-h-11 rounded-lg border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
               >
-                Manage Bookings
+                Manage bookings
               </Link>
             </div>
           </article>
 
           <article className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50 p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:from-slate-900 dark:to-blue-950/30 dark:ring-slate-800">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Booking Health
+              Booking status
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
               Availability summary
@@ -297,7 +297,7 @@ export function Dashboard() {
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-slate-600 dark:text-slate-400">
-                  Upcoming reservations
+                  Upcoming
                 </span>
                 <span className="font-semibold text-slate-950 dark:text-white">
                   {upcomingBookings.length}
@@ -305,7 +305,7 @@ export function Dashboard() {
               </div>
               <div className="flex items-center justify-between gap-4">
                 <span className="text-slate-600 dark:text-slate-400">
-                  Cancelled reservations
+                  Cancelled
                 </span>
                 <span className="font-semibold text-slate-950 dark:text-white">
                   {cancelledBookings.length}
@@ -314,8 +314,8 @@ export function Dashboard() {
             </div>
             <p className="mt-5 rounded-xl bg-white/70 p-4 text-sm leading-6 text-slate-600 transition-colors duration-300 ease-in-out dark:bg-slate-950/70 dark:text-slate-400">
               {upcomingBookings.length > 0
-                ? 'Your next reservation is ready to review. Check your booking details before heading to campus.'
-                : 'No upcoming reservations yet. Start by browsing available resources or creating a booking.'}
+                ? 'Review your next booking before heading to campus.'
+                : 'No upcoming reservations yet. Browse resources or create a booking.'}
             </p>
           </article>
         </div>

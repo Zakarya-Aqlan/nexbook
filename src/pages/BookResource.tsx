@@ -18,24 +18,23 @@ export function BookResource() {
               Book a Resource
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
-              Choose a campus resource, pick a clear available slot, and submit
-              your request with confidence.
+              Choose a resource, pick a slot, and confirm your booking.
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-white/10 p-5 shadow-2xl shadow-slate-950/20 backdrop-blur transition-colors duration-300 ease-in-out">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
-              Booking Flow
+              Booking flow
             </p>
             <div className="mt-5 space-y-3 text-sm text-blue-50/85">
               <p className="rounded-xl bg-white/10 p-3">
-                1. Select your resource and date
+                1. Select a resource and date
               </p>
               <p className="rounded-xl bg-white/10 p-3">
-                2. Choose an available duration and slot
+                2. Choose a duration and slot
               </p>
               <p className="rounded-xl bg-white/10 p-3">
-                3. Confirm details and manage it later
+                3. Confirm and manage it later
               </p>
             </div>
           </div>

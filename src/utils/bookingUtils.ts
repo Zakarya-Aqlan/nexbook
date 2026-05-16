@@ -12,7 +12,7 @@ export function getPastDateError(date: string): string | null {
   today.setHours(0, 0, 0, 0)
 
   if (bookingDate < today) {
-    return 'Booking date cannot be in the past.'
+    return 'Choose today or a future date.'
   }
 
   return null
@@ -40,7 +40,7 @@ export function getOpeningHoursError(
   const bookingEnds = timeToMinutes(endTime)
 
   if (bookingStarts < resourceOpens || bookingEnds > resourceCloses) {
-    return 'Booking time must be within the resource opening hours.'
+    return 'Time must be within resource hours.'
   }
 
   return null
@@ -65,7 +65,7 @@ export function hasBookingConflict(
   })
 
   if (hasConflict) {
-    return 'This resource is already booked during that time.'
+    return 'This resource is booked for that time.'
   }
 
   return null
@@ -78,11 +78,11 @@ export function getDurationError(
   const duration = timeToMinutes(endTime) - timeToMinutes(startTime)
 
   if (duration < 60) {
-    return 'Booking must be at least 1 hour long.'
+    return 'Booking must be at least 1 hour.'
   }
 
   if (duration > 180) {
-    return 'Booking cannot be longer than 3 hours.'
+    return 'Booking cannot exceed 3 hours.'
   }
 
   return null

@@ -9,7 +9,7 @@ export const resources: Resource[] = [
     capacity: 2,
     openingTime: '08:00',
     closingTime: '22:00',
-    description: 'A quiet pod for focused study or one-on-one discussions.',
+    description: 'Quiet space for focused study or one-on-one work.',
   },
   {
     id: 'project-room-b',
@@ -19,7 +19,7 @@ export const resources: Resource[] = [
     capacity: 6,
     openingTime: '09:00',
     closingTime: '21:00',
-    description: 'A group project room with a whiteboard and shared display.',
+    description: 'Group room with a whiteboard and shared display.',
   },
   {
     id: 'mac-lab',
@@ -29,7 +29,7 @@ export const resources: Resource[] = [
     capacity: 24,
     openingTime: '08:30',
     closingTime: '20:30',
-    description: 'A computer lab with Mac workstations for design and media work.',
+    description: 'Mac workstations for design and media projects.',
   },
   {
     id: 'camera-kit',
@@ -39,7 +39,7 @@ export const resources: Resource[] = [
     capacity: 1,
     openingTime: '10:00',
     closingTime: '18:00',
-    description: 'A DSLR camera kit for student projects and event coverage.',
+    description: 'DSLR kit for student projects and event coverage.',
   },
   {
     id: 'presentation-room',
@@ -49,7 +49,7 @@ export const resources: Resource[] = [
     capacity: 20,
     openingTime: '09:00',
     closingTime: '20:00',
-    description: 'A room with projector support for rehearsals and presentations.',
+    description: 'Projector-ready room for rehearsals and presentations.',
   },
   {
     id: 'discussion-room',
@@ -59,7 +59,7 @@ export const resources: Resource[] = [
     capacity: 8,
     openingTime: '08:00',
     closingTime: '22:00',
-    description: 'A casual space for team discussions and peer learning sessions.',
+    description: 'Casual space for team discussions and peer learning.',
   },
   {
     id: 'group-study-room-c',
@@ -69,7 +69,7 @@ export const resources: Resource[] = [
     capacity: 10,
     openingTime: '08:00',
     closingTime: '22:00',
-    description: 'A mid-sized group room ideal for collaborative work and study sessions.',
+    description: 'Mid-sized room for group study and collaboration.',
   },
   {
     id: 'podcast-room',
@@ -79,7 +79,7 @@ export const resources: Resource[] = [
     capacity: 4,
     openingTime: '09:00',
     closingTime: '19:00',
-    description: 'A soundproofed room with basic recording setup for podcasting and interviews.',
+    description: 'Soundproof room for podcasts and interviews.',
   },
   {
     id: 'vr-lab',
@@ -89,7 +89,7 @@ export const resources: Resource[] = [
     capacity: 8,
     openingTime: '09:00',
     closingTime: '20:00',
-    description: 'A virtual reality lab with headsets for design, simulation, and research.',
+    description: 'VR headsets for design, simulation, and research.',
   },
   {
     id: 'robotics-lab',
@@ -99,7 +99,7 @@ export const resources: Resource[] = [
     capacity: 16,
     openingTime: '09:00',
     closingTime: '19:00',
-    description: 'A hands-on lab for robotics projects with workbenches and component kits.',
+    description: 'Workbenches and kits for robotics projects.',
   },
   {
     id: 'podcast-mic-kit',
@@ -109,7 +109,7 @@ export const resources: Resource[] = [
     capacity: 1,
     openingTime: '10:00',
     closingTime: '18:00',
-    description: 'A portable microphone kit for recording podcasts and voice-overs.',
+    description: 'Portable microphones for podcasts and voice-overs.',
   },
   {
     id: 'futsal-court',
@@ -119,7 +119,7 @@ export const resources: Resource[] = [
     capacity: 14,
     openingTime: '07:00',
     closingTime: '22:00',
-    description: 'An indoor futsal court for casual matches and training sessions.',
+    description: 'Indoor court for casual matches and training.',
   },
   {
     id: 'basketball-court',
@@ -129,7 +129,7 @@ export const resources: Resource[] = [
     capacity: 20,
     openingTime: '07:00',
     closingTime: '22:00',
-    description: 'A full-sized indoor basketball court for games and practice.',
+    description: 'Full-sized indoor court for games and practice.',
   },
   {
     id: 'badminton-court',
@@ -139,6 +139,6 @@ export const resources: Resource[] = [
     capacity: 4,
     openingTime: '07:00',
     closingTime: '22:00',
-    description: 'A single badminton court for recreational play and practice.',
+    description: 'Single court for recreational play and practice.',
   },
 ]
