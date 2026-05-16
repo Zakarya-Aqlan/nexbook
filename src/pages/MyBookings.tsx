@@ -25,6 +25,7 @@ import {
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
+import { formatStudentIdForDisplay } from '../utils/studentIdUtils'
 import type { ResourceSelectLabels } from '../components/ResourceSelect'
 
 type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
@@ -566,7 +567,9 @@ export function MyBookings() {
                         Edit booking
                       </h2>
                       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                        Student: {booking.studentName} ({booking.studentId})
+                        {`Student: ${booking.studentName} (${formatStudentIdForDisplay(
+                          booking.studentId,
+                        )})`}
                       </p>
                     </div>
 

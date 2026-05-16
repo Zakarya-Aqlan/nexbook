@@ -18,6 +18,11 @@ import {
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
 import { addBooking, getBookings } from '../utils/storage'
+import {
+  formatStudentIdForDisplay,
+  formatStudentIdForStorage,
+  getStudentIdDigits,
+} from '../utils/studentIdUtils'
 import { AvailabilitySlots } from './AvailabilitySlots'
 import { DatePicker } from './DatePicker'
 import { ResourceSelect } from './ResourceSelect'
@@ -57,11 +62,11 @@ function getStudentNameError(studentName: string) {
 }
 
 function getStudentIdError(studentId: string) {
-  if (!studentId || /^[0-9]+$/.test(studentId)) {
+  if (!studentId || /^[0-9]{6}$/.test(studentId)) {
     return ''
   }
 
-  return 'Student ID: use numbers only.'
+  return 'Student ID must be 6 digits.'
 }
 
 function getPurposeError(purpose: string) {
@@ -138,6 +143,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const selectedResource = useMemo(
     () => resources.find((resource) => resource.id === form.resourceId),
     [form.resourceId],
+  )
+  const confirmedResource = useMemo(
+    () =>
+      confirmedBooking
+        ? resources.find((resource) => resource.id === confirmedBooking.resourceId)
+        : undefined,
+    [confirmedBooking],
   )
   const savedBookings = getBookings()
   const selectedDateIsToday = form.date === getTodayDate()
@@ -238,6 +250,15 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     setSuccessMessage('Booking saved.')
     setErrorMessage('')
     setPendingSameDayBooking(null)
+    setSelectedDuration(60)
+    setForm((currentForm) => ({
+      ...currentForm,
+      resourceId: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      purpose: '',
+    }))
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -270,7 +291,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       id: `booking-${Date.now()}`,
       resourceId: form.resourceId,
       studentName: form.studentName.trim(),
-      studentId: form.studentId.trim(),
+      studentId: formatStudentIdForStorage(form.studentId),
       date: form.date,
       startTime: form.startTime,
       endTime: form.endTime,
@@ -364,15 +385,22 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
               <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Student ID
               </span>
-              <input
-                type="text"
-                value={form.studentId}
-                onChange={(event) =>
-                  updateField('studentId', event.target.value)
-                }
-                className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                placeholder="085953"
-              />
+              <div className="flex min-h-11 w-full overflow-hidden rounded-lg border border-slate-300 bg-white text-sm text-slate-900 shadow-sm transition-colors duration-300 ease-in-out hover:border-slate-400 focus-within:border-blue-700 focus-within:ring-2 focus-within:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:focus-within:border-blue-500 dark:focus-within:ring-blue-900">
+                <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3.5 font-semibold text-slate-600 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                  TP
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={form.studentId}
+                  onChange={(event) =>
+                    updateField('studentId', getStudentIdDigits(event.target.value))
+                  }
+                  className="min-h-11 min-w-0 flex-1 border-0 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+                  placeholder="085953"
+                  aria-label="Student ID digits"
+                />
+              </div>
               {studentIdError && (
                 <p className="rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
                   {studentIdError}
@@ -515,7 +543,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           Booking summary
         </h2>
 
-        {confirmedBooking && selectedResource ? (
+        {confirmedBooking && confirmedResource ? (
           <>
             <p className="mt-4 rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
               Booking confirmed.
@@ -525,15 +553,15 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
                   Resource
                 </dt>
-                <dd>{selectedResource.name}</dd>
+                <dd>{confirmedResource.name}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
                   Student
                 </dt>
-                <dd>
-                  {confirmedBooking.studentName} ({confirmedBooking.studentId})
-                </dd>
+                <dd>{`${confirmedBooking.studentName} (${formatStudentIdForDisplay(
+                  confirmedBooking.studentId,
+                )})`}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
