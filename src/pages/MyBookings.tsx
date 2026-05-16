@@ -85,13 +85,17 @@ function getSlotWord(count: number) {
   return count === 1 ? 'slot' : 'slots'
 }
 
-function getTodayResourceLabel(
+function getResourceAvailabilityLabel(
   minimumSlotCount: number,
   selectedDurationSlotCount: number,
   selectedDuration: number,
+  selectedDateIsToday: boolean,
 ): ResourceSelectLabels[string] {
   if (minimumSlotCount === 0) {
-    return { text: 'Unavailable today', tone: 'warning' }
+    return {
+      text: selectedDateIsToday ? 'Unavailable today' : 'Unavailable on this date',
+      tone: 'warning',
+    }
   }
 
   if (
@@ -104,7 +108,7 @@ function getTodayResourceLabel(
     }
   }
 
-  if (minimumSlotCount <= 2) {
+  if (selectedDateIsToday && minimumSlotCount <= 2) {
     return {
       text: `Closing soon - ${minimumSlotCount} ${getSlotWord(
         minimumSlotCount,
@@ -188,7 +192,7 @@ export function MyBookings() {
   )
   const editSelectedDateIsToday = editForm.date === todayDate
   const editExcludeBookingId = editingBookingId || undefined
-  const editTodayResourceAvailability = editSelectedDateIsToday
+  const editResourceAvailability = editForm.date
     ? resources.map((resource) => ({
         resourceId: resource.id,
         minimumSlotCount: getAvailableSlotCount({
@@ -207,25 +211,26 @@ export function MyBookings() {
         }),
       }))
     : []
-  const editUnavailableTodayResourceIds = editTodayResourceAvailability
+  const editUnavailableResourceIds = editResourceAvailability
     .filter(({ minimumSlotCount }) => minimumSlotCount === 0)
     .map(({ resourceId }) => resourceId)
-  const editTodayResourceLabels =
-    editTodayResourceAvailability.reduce<ResourceSelectLabels>(
+  const editResourceLabels =
+    editResourceAvailability.reduce<ResourceSelectLabels>(
       (labels, resourceAvailability) => ({
         ...labels,
-        [resourceAvailability.resourceId]: getTodayResourceLabel(
+        [resourceAvailability.resourceId]: getResourceAvailabilityLabel(
           resourceAvailability.minimumSlotCount,
           resourceAvailability.selectedDurationSlotCount,
           editDuration,
+          editSelectedDateIsToday,
         ),
       }),
       {},
     )
   const editTodayIsNoLongerBookable =
     editSelectedDateIsToday &&
-    editTodayResourceAvailability.length > 0 &&
-    editTodayResourceAvailability.every(
+    editResourceAvailability.length > 0 &&
+    editResourceAvailability.every(
       ({ minimumSlotCount }) => minimumSlotCount === 0,
     )
   const editMinBookingDate = todayDate
@@ -569,8 +574,8 @@ export function MyBookings() {
                       label="Resource"
                       resources={resources}
                       value={editForm.resourceId}
-                      unavailableResourceIds={editUnavailableTodayResourceIds}
-                      resourceLabels={editTodayResourceLabels}
+                      unavailableResourceIds={editUnavailableResourceIds}
+                      resourceLabels={editResourceLabels}
                       onChange={(resourceId) => {
                         setEditForm((currentForm) => ({
                           ...currentForm,

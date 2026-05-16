@@ -20,6 +20,7 @@ type ResourceSelectProps = {
   unavailableResourceIds?: string[]
   unavailableLabel?: string
   resourceLabels?: ResourceSelectLabels
+  disabled?: boolean
 }
 
 function ChevronIcon({ isOpen }: { isOpen: boolean }) {
@@ -65,6 +66,7 @@ export function ResourceSelect({
   unavailableResourceIds = [],
   unavailableLabel = 'Unavailable today',
   resourceLabels = {},
+  disabled = false,
 }: ResourceSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -110,6 +112,10 @@ export function ResourceSelect({
   }, [])
 
   function handleSelect(resourceId: string) {
+    if (disabled) {
+      return
+    }
+
     if (unavailableResourceSet.has(resourceId)) {
       return
     }
@@ -129,8 +135,9 @@ export function ResourceSelect({
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-label={label}
+        disabled={disabled}
         onClick={() => setIsOpen((currentValue) => !currentValue)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-slate-400 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900"
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-left text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-slate-400 hover:bg-slate-50 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:hover:border-slate-300 disabled:hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900 dark:focus:border-blue-500 dark:focus:ring-blue-900 dark:disabled:bg-slate-900 dark:disabled:text-slate-600 dark:disabled:hover:border-slate-700"
       >
         <span className="min-w-0">
           <span
@@ -155,7 +162,7 @@ export function ResourceSelect({
         </span>
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div
           role="listbox"
           className="custom-scrollbar absolute left-0 right-0 z-30 mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950 dark:ring-slate-800"

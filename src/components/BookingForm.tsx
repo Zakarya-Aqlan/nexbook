@@ -76,13 +76,17 @@ function getSlotWord(count: number) {
   return count === 1 ? 'slot' : 'slots'
 }
 
-function getTodayResourceLabel(
+function getResourceAvailabilityLabel(
   minimumSlotCount: number,
   selectedDurationSlotCount: number,
   selectedDuration: number,
+  selectedDateIsToday: boolean,
 ): ResourceSelectLabels[string] {
   if (minimumSlotCount === 0) {
-    return { text: 'Unavailable today', tone: 'warning' }
+    return {
+      text: selectedDateIsToday ? 'Unavailable today' : 'Unavailable on this date',
+      tone: 'warning',
+    }
   }
 
   if (
@@ -95,7 +99,7 @@ function getTodayResourceLabel(
     }
   }
 
-  if (minimumSlotCount <= 2) {
+  if (selectedDateIsToday && minimumSlotCount <= 2) {
     return {
       text: `Closing soon - ${minimumSlotCount} ${getSlotWord(
         minimumSlotCount,
@@ -137,7 +141,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   )
   const savedBookings = getBookings()
   const selectedDateIsToday = form.date === getTodayDate()
-  const todayResourceAvailability = selectedDateIsToday
+  const selectedDateResourceAvailability = form.date
     ? resources.map((resource) => ({
         resourceId: resource.id,
         minimumSlotCount: getAvailableSlotCount({
@@ -154,25 +158,26 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         }),
       }))
     : []
-  const unavailableTodayResourceIds = todayResourceAvailability
+  const unavailableSelectedDateResourceIds = selectedDateResourceAvailability
     .filter(({ minimumSlotCount }) => minimumSlotCount === 0)
     .map(({ resourceId }) => resourceId)
-  const todayResourceLabels =
-    todayResourceAvailability.reduce<ResourceSelectLabels>(
+  const selectedDateResourceLabels =
+    selectedDateResourceAvailability.reduce<ResourceSelectLabels>(
       (labels, resourceAvailability) => ({
         ...labels,
-        [resourceAvailability.resourceId]: getTodayResourceLabel(
+        [resourceAvailability.resourceId]: getResourceAvailabilityLabel(
           resourceAvailability.minimumSlotCount,
           resourceAvailability.selectedDurationSlotCount,
           selectedDuration,
+          selectedDateIsToday,
         ),
       }),
       {},
     )
   const todayIsNoLongerBookable =
     selectedDateIsToday &&
-    todayResourceAvailability.length > 0 &&
-    todayResourceAvailability.every(
+    selectedDateResourceAvailability.length > 0 &&
+    selectedDateResourceAvailability.every(
       ({ minimumSlotCount }) => minimumSlotCount === 0,
     )
   const minBookingDate = getTodayDate()
@@ -387,12 +392,39 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             </h2>
           </div>
 
+          <DatePicker
+            label="Date"
+            value={form.date}
+            minDate={minBookingDate}
+            onChange={(date) => {
+              setForm((currentForm) => ({
+                ...currentForm,
+                date,
+                startTime: '',
+                endTime: '',
+              }))
+              setErrorMessage('')
+              setSuccessMessage('')
+            }}
+          />
+          {todayIsNoLongerBookable && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+              No bookings are available today. Choose another date.
+            </p>
+          )}
+          <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+            Select a date to view available resources and slots.
+          </p>
+
           <ResourceSelect
             label="Resource"
             resources={resources}
-            value={form.resourceId}
-            unavailableResourceIds={unavailableTodayResourceIds}
-            resourceLabels={todayResourceLabels}
+            value={form.date ? form.resourceId : ''}
+            unavailableResourceIds={
+              form.date ? unavailableSelectedDateResourceIds : []
+            }
+            resourceLabels={form.date ? selectedDateResourceLabels : {}}
+            disabled={!form.date}
             onChange={(resourceId) => {
               setForm((currentForm) => ({
                 ...currentForm,
@@ -405,7 +437,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             }}
           />
 
-          {selectedResource && (
+          {form.date && selectedResource && (
             <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-950 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
               <p className="font-semibold">{selectedResource.name}</p>
               <p className="mt-1 leading-6">
@@ -420,35 +452,22 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
             </div>
           )}
 
-          <section className="space-y-4 border-t border-slate-200 pt-5 transition-colors duration-300 ease-in-out dark:border-slate-800">
-          <DatePicker
-            label="Date"
-            value={form.date}
-            minDate={minBookingDate}
-            onChange={(date) => updateField('date', date)}
-          />
-          {todayIsNoLongerBookable && (
-            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
-              No bookings are available today. Choose another date.
-            </p>
+          {form.date && selectedResource && (
+            <section className="space-y-4 border-t border-slate-200 pt-5 transition-colors duration-300 ease-in-out dark:border-slate-800">
+              <AvailabilitySlots
+                resource={selectedResource}
+                date={form.date}
+                duration={selectedDuration}
+                selectedStartTime={form.startTime}
+                selectedEndTime={form.endTime}
+                onDurationChange={setSelectedDuration}
+                onSelectSlot={(startTime, endTime) => {
+                  updateField('startTime', startTime)
+                  updateField('endTime', endTime)
+                }}
+              />
+            </section>
           )}
-          <p className="max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-            Select a date to view available slots.
-          </p>
-
-          <AvailabilitySlots
-            resource={selectedResource}
-            date={form.date}
-            duration={selectedDuration}
-            selectedStartTime={form.startTime}
-            selectedEndTime={form.endTime}
-            onDurationChange={setSelectedDuration}
-            onSelectSlot={(startTime, endTime) => {
-              updateField('startTime', startTime)
-              updateField('endTime', endTime)
-            }}
-          />
-          </section>
         </section>
 
         <label className="space-y-2">
