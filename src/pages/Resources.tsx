@@ -45,10 +45,10 @@ export function Resources() {
 
   return (
     <main className="space-y-8 transition-colors duration-300 ease-in-out">
-      <section className="relative overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-blue-950/10 transition-colors duration-300 ease-in-out sm:p-8 lg:p-10 dark:bg-slate-900 dark:shadow-black/20">
+      <section className="relative min-h-[28rem] overflow-hidden rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-blue-950/10 transition-colors duration-300 ease-in-out sm:p-8 lg:min-h-[22rem] lg:p-10 dark:bg-slate-900 dark:shadow-black/20">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(37,99,235,0.28),transparent_45%,rgba(79,70,229,0.18))]" />
         <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent" />
-        <div className="relative grid gap-8 lg:grid-cols-[1.45fr_0.8fr] lg:items-center">
+        <div className="relative grid min-h-[inherit] gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.85fr)] lg:items-center">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-200">
               Resources
