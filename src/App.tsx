@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { Footer } from './components/Footer'
 import { Navbar } from './components/Navbar'
 import { BookResource } from './pages/BookResource'
 import { Dashboard } from './pages/Dashboard'
@@ -20,6 +21,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+      <Footer />
     </div>
   )
 }
