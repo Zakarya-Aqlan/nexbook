@@ -89,12 +89,6 @@ export function Resources() {
               >
                 Book a resource
               </Link>
-              <Link
-                to="/my-bookings"
-                className="min-h-11 rounded-lg border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white transition-colors duration-300 ease-in-out hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50"
-              >
-                View my bookings
-              </Link>
             </div>
           </div>
 
