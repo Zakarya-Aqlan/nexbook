@@ -40,7 +40,6 @@ type BookingFormValues = {
   date: string
   startTime: string
   endTime: string
-  purpose: string
 }
 
 const emptyForm: BookingFormValues = {
@@ -50,7 +49,6 @@ const emptyForm: BookingFormValues = {
   date: '',
   startTime: '',
   endTime: '',
-  purpose: '',
 }
 
 function getStudentNameError(studentName: string) {
@@ -67,14 +65,6 @@ function getStudentIdError(studentId: string) {
   }
 
   return 'Student ID must be 6 digits.'
-}
-
-function getPurposeError(purpose: string) {
-  if (!purpose || /^[A-Za-z0-9 .,!?'"():;&/\-\r\n]+$/.test(purpose)) {
-    return ''
-  }
-
-  return 'Purpose: use letters, numbers, spaces, and basic punctuation.'
 }
 
 function getSlotWord(count: number) {
@@ -196,12 +186,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
   const studentNameError = getStudentNameError(form.studentName)
   const studentIdError = getStudentIdError(form.studentId)
-  const purposeError = getPurposeError(form.purpose)
-  const fieldValidationErrors = [
-    studentNameError,
-    studentIdError,
-    purposeError,
-  ].filter(Boolean)
+  const fieldValidationErrors = [studentNameError, studentIdError].filter(Boolean)
 
   function updateField(field: keyof BookingFormValues, value: string) {
     setForm((currentForm) => ({
@@ -237,10 +222,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       return 'Choose an end time.'
     }
 
-    if (!form.purpose.trim()) {
-      return 'Enter a purpose.'
-    }
-
     return null
   }
 
@@ -257,7 +238,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       date: '',
       startTime: '',
       endTime: '',
-      purpose: '',
     }))
   }
 
@@ -295,7 +275,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       date: form.date,
       startTime: form.startTime,
       endTime: form.endTime,
-      purpose: form.purpose.trim(),
+      purpose: '',
       status: 'pending',
       createdAt: new Date().toISOString(),
       remainingEdits: 2,
@@ -498,23 +478,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           )}
         </section>
 
-        <label className="space-y-2">
-          <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-            Purpose
-          </span>
-          <textarea
-            value={form.purpose}
-            onChange={(event) => updateField('purpose', event.target.value)}
-            className="min-h-32 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-            placeholder="Briefly explain the booking purpose."
-          />
-          {purposeError && (
-            <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-              {purposeError}
-            </p>
-          )}
-        </label>
-
         {errorMessage && (
           <p className="whitespace-pre-line rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
             {errorMessage}
@@ -571,12 +534,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                   {confirmedBooking.date}, {confirmedBooking.startTime} -{' '}
                   {confirmedBooking.endTime}
                 </dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Purpose
-                </dt>
-                <dd>{confirmedBooking.purpose}</dd>
               </div>
               <div>
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
