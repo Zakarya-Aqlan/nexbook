@@ -17,6 +17,7 @@ const dashboardSubtitles = [
 ]
 
 const maxRemainingEdits = 2
+const itemsPerActivityPage = 5
 
 type DashboardActivity = Omit<ActivityItem, 'action'> & {
   action: ActivityItem['action'] | 'completed'
@@ -135,6 +136,7 @@ function getActivityTimestamp(activity: DashboardActivity) {
 export function Dashboard() {
   const [subtitleIndex, setSubtitleIndex] = useState(0)
   const [todayActiveIndex, setTodayActiveIndex] = useState(0)
+  const [activityPage, setActivityPage] = useState(0)
   const bookings = getBookings()
   const activityItems = getActivityItems()
   const now = new Date()
@@ -205,7 +207,19 @@ export function Dashboard() {
         getActivityTimestamp(secondActivity) -
         getActivityTimestamp(firstActivity),
     )
-    .slice(0, 5)
+
+  const totalActivityPages = Math.ceil(
+    recentActivities.length / itemsPerActivityPage,
+  )
+  const lastActivityPage = Math.max(totalActivityPages - 1, 0)
+  const currentActivityPage = Math.min(activityPage, lastActivityPage)
+  const activityPageStart = currentActivityPage * itemsPerActivityPage
+  const paginatedActivities = recentActivities.slice(
+    activityPageStart,
+    activityPageStart + itemsPerActivityPage,
+  )
+  const isFirstActivityPage = currentActivityPage === 0
+  const isLastActivityPage = currentActivityPage >= lastActivityPage
 
   useEffect(() => {
     if (todayActiveBookings.length <= 1) {
@@ -225,6 +239,12 @@ export function Dashboard() {
 
     return () => window.clearInterval(timer)
   }, [todayActiveBookings.length])
+
+  useEffect(() => {
+    if (activityPage > lastActivityPage) {
+      setActivityPage(lastActivityPage)
+    }
+  }, [activityPage, lastActivityPage])
 
   return (
     <main className="space-y-8 transition-colors duration-300 ease-in-out">
@@ -257,6 +277,18 @@ export function Dashboard() {
                   from {
                     opacity: 0;
                     transform: translateY(0.5rem);
+                  }
+
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+
+                @keyframes dashboard-activity-page-enter {
+                  from {
+                    opacity: 0;
+                    transform: translateY(0.35rem);
                   }
 
                   to {
@@ -382,38 +414,75 @@ export function Dashboard() {
           </h2>
         </div>
         {recentActivities.length > 0 ? (
-          <div className="mt-5 space-y-3">
-            {recentActivities.map((activity) => {
-              const styles = activityStyles[activity.action]
+          <>
+            <div
+              key={currentActivityPage}
+              className="mt-5 space-y-3"
+              style={{
+                animation: 'dashboard-activity-page-enter 350ms ease-out both',
+              }}
+            >
+              {paginatedActivities.map((activity) => {
+                const styles = activityStyles[activity.action]
 
-              return (
-                <article
-                  key={`${activity.action}-${activity.id}`}
-                  className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-950"
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`mt-2 h-2.5 w-2.5 rounded-full ${styles.dot}`}
-                      aria-hidden="true"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {getActivityMessage(activity)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {getActivityTime(activity, todayDate)}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${styles.badge}`}
+                return (
+                  <article
+                    key={`${activity.action}-${activity.id}`}
+                    className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-950"
                   >
-                    {styles.label}
-                  </span>
-                </article>
-              )
-            })}
-          </div>
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={`mt-2 h-2.5 w-2.5 rounded-full ${styles.dot}`}
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                          {getActivityMessage(activity)}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                          {getActivityTime(activity, todayDate)}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${styles.badge}`}
+                    >
+                      {styles.label}
+                    </span>
+                  </article>
+                )
+              })}
+            </div>
+            {totalActivityPages > 1 && (
+              <div className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActivityPage((page) => Math.max(page - 1, 0))
+                  }
+                  disabled={isFirstActivityPage}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-blue-900"
+                >
+                  Previous
+                </button>
+                <p className="text-center text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Page {currentActivityPage + 1} of {totalActivityPages}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActivityPage((page) =>
+                      Math.min(page + 1, lastActivityPage),
+                    )
+                  }
+                  disabled={isLastActivityPage}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-blue-900"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <p className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
             No activity yet. Create a booking to start your history.

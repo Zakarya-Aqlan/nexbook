@@ -1,7 +1,6 @@
 import type { Booking } from '../types'
 
 const ACTIVITY_KEY = 'nexbook-activity'
-const maxActivityItems = 25
 
 export type ActivityAction = 'booked' | 'updated' | 'cancelled'
 
@@ -58,7 +57,7 @@ export function addActivityItem(action: ActivityAction, booking: Booking) {
 
     localStorage.setItem(
       ACTIVITY_KEY,
-      JSON.stringify([activityItem, ...activityItems].slice(0, maxActivityItems)),
+      JSON.stringify([activityItem, ...activityItems]),
     )
   } catch {
     // Activity history should never block booking storage.
