@@ -42,6 +42,10 @@ type BookingFormValues = {
   endTime: string
 }
 
+type BookingDraft = BookingFormValues & {
+  selectedDuration: number
+}
+
 const emptyForm: BookingFormValues = {
   studentName: '',
   studentId: '',
@@ -49,6 +53,55 @@ const emptyForm: BookingFormValues = {
   date: '',
   startTime: '',
   endTime: '',
+}
+
+const bookingDraftKey = 'nexbook-booking-draft'
+const defaultBookingDuration = 60
+
+function getSavedBookingDraft(): BookingDraft {
+  const savedDraft = localStorage.getItem(bookingDraftKey)
+
+  if (!savedDraft) {
+    return {
+      ...emptyForm,
+      selectedDuration: defaultBookingDuration,
+    }
+  }
+
+  try {
+    const draft = JSON.parse(savedDraft)
+
+    if (draft && typeof draft === 'object') {
+      return {
+        studentName:
+          typeof draft.studentName === 'string' ? draft.studentName : '',
+        studentId: typeof draft.studentId === 'string' ? draft.studentId : '',
+        resourceId:
+          typeof draft.resourceId === 'string' ? draft.resourceId : '',
+        date: typeof draft.date === 'string' ? draft.date : '',
+        startTime:
+          typeof draft.startTime === 'string' ? draft.startTime : '',
+        endTime: typeof draft.endTime === 'string' ? draft.endTime : '',
+        selectedDuration: [60, 120, 180].includes(draft.selectedDuration)
+          ? draft.selectedDuration
+          : defaultBookingDuration,
+      }
+    }
+  } catch {
+    return {
+      ...emptyForm,
+      selectedDuration: defaultBookingDuration,
+    }
+  }
+
+  return {
+    ...emptyForm,
+    selectedDuration: defaultBookingDuration,
+  }
+}
+
+function saveBookingDraft(draft: BookingDraft) {
+  localStorage.setItem(bookingDraftKey, JSON.stringify(draft))
 }
 
 function getStudentNameError(studentName: string) {
@@ -112,23 +165,46 @@ function getResourceAvailabilityLabel(
 }
 
 export function BookingForm({ initialResourceId }: BookingFormProps) {
-  const [form, setForm] = useState<BookingFormValues>(emptyForm)
+  const [form, setForm] = useState<BookingFormValues>(() => {
+    const savedDraft = getSavedBookingDraft()
+
+    return {
+      studentName: savedDraft.studentName,
+      studentId: getStudentIdDigits(savedDraft.studentId),
+      resourceId: savedDraft.resourceId,
+      date: savedDraft.date,
+      startTime: savedDraft.startTime,
+      endTime: savedDraft.endTime,
+    }
+  })
   const [errorMessage, setErrorMessage] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
   const [pendingSameDayBooking, setPendingSameDayBooking] =
     useState<Booking | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState(60)
+  const [selectedDuration, setSelectedDuration] = useState(
+    () => getSavedBookingDraft().selectedDuration,
+  )
   useEffect(() => {
     const resourceExists = resources.some(
       (resource) => resource.id === initialResourceId,
     )
 
+    if (!initialResourceId || !resourceExists) {
+      return
+    }
+
     setForm((currentForm) => ({
       ...currentForm,
-      resourceId: resourceExists && initialResourceId ? initialResourceId : '',
+      resourceId: currentForm.resourceId || initialResourceId,
     }))
   }, [initialResourceId])
+
+  useEffect(() => {
+    saveBookingDraft({
+      ...form,
+      selectedDuration,
+    })
+  }, [form, selectedDuration])
 
   const selectedResource = useMemo(
     () => resources.find((resource) => resource.id === form.resourceId),
@@ -194,7 +270,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       [field]: value,
     }))
     setErrorMessage('')
-    setSuccessMessage('')
   }
 
   function getRequiredFieldError() {
@@ -228,10 +303,9 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   function saveBooking(booking: Booking) {
     addBooking(booking)
     setConfirmedBooking(booking)
-    setSuccessMessage('Booking saved.')
     setErrorMessage('')
     setPendingSameDayBooking(null)
-    setSelectedDuration(60)
+    setSelectedDuration(defaultBookingDuration)
     setForm((currentForm) => ({
       ...currentForm,
       resourceId: '',
@@ -248,21 +322,18 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     if (requiredFieldError) {
       setErrorMessage(requiredFieldError)
-      setSuccessMessage('')
       setConfirmedBooking(null)
       return
     }
 
     if (fieldValidationErrors.length > 0) {
       setErrorMessage(fieldValidationErrors.join('\n'))
-      setSuccessMessage('')
       setConfirmedBooking(null)
       return
     }
 
     if (!selectedResource) {
       setErrorMessage('Choose a valid resource.')
-      setSuccessMessage('')
       setConfirmedBooking(null)
       return
     }
@@ -301,7 +372,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     if (validationError) {
       setErrorMessage(validationError)
-      setSuccessMessage('')
       setConfirmedBooking(null)
       return
     }
@@ -309,7 +379,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     if (newBooking.date === getTodayDate()) {
       setPendingSameDayBooking(newBooking)
       setConfirmedBooking(null)
-      setSuccessMessage('')
       setErrorMessage('')
       return
     }
@@ -412,7 +481,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                 endTime: '',
               }))
               setErrorMessage('')
-              setSuccessMessage('')
             }}
           />
           {todayIsNoLongerBookable && (
@@ -441,7 +509,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                 endTime: '',
               }))
               setErrorMessage('')
-              setSuccessMessage('')
             }}
           />
 
@@ -481,12 +548,6 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         {errorMessage && (
           <p className="whitespace-pre-line rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
             {errorMessage}
-          </p>
-        )}
-
-        {successMessage && (
-          <p className="rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
-            {successMessage}
           </p>
         )}
 
@@ -539,7 +600,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                 <dt className="font-semibold text-slate-900 dark:text-slate-100">
                   Status
                 </dt>
-                <dd className="capitalize">{confirmedBooking.status}</dd>
+                <dd>Confirmed</dd>
               </div>
             </dl>
             <p className="mt-5 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
