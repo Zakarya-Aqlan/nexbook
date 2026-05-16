@@ -1,4 +1,5 @@
 import type { Booking } from '../types'
+import { addActivityItem } from './activityStorage'
 
 const BOOKINGS_KEY = 'nexbook-bookings'
 
@@ -29,6 +30,7 @@ export function saveBookings(bookings: Booking[]) {
 export function addBooking(booking: Booking) {
   const bookings = getBookings()
   saveBookings([...bookings, booking])
+  addActivityItem('booked', booking)
 }
 
 export function updateBooking(updatedBooking: Booking) {
@@ -38,13 +40,22 @@ export function updateBooking(updatedBooking: Booking) {
   )
 
   saveBookings(updatedBookings)
+  addActivityItem('updated', updatedBooking)
 }
 
 export function cancelBooking(bookingId: string) {
   const bookings = getBookings()
+  const cancelledBooking = bookings.find((booking) => booking.id === bookingId)
   const updatedBookings: Booking[] = bookings.map((booking) =>
     booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking,
   )
 
   saveBookings(updatedBookings)
+
+  if (cancelledBooking) {
+    addActivityItem('cancelled', {
+      ...cancelledBooking,
+      status: 'cancelled',
+    })
+  }
 }

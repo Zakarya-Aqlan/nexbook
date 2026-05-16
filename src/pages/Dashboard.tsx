@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { StatCard } from '../components/StatCard'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
+import { getActivityItems, type ActivityItem } from '../utils/activityStorage'
+import { getTodayDate } from '../utils/dateUtils'
 import { getBookings } from '../utils/storage'
 
 const dashboardSubtitles = [
@@ -13,6 +15,39 @@ const dashboardSubtitles = [
   'Manage active, cancelled, and completed bookings.',
   'Keep campus schedules simple and conflict-free.',
 ]
+
+const maxRemainingEdits = 2
+
+type DashboardActivity = Omit<ActivityItem, 'action'> & {
+  action: ActivityItem['action'] | 'completed'
+}
+
+const activityStyles = {
+  booked: {
+    label: 'Booked',
+    dot: 'bg-blue-500',
+    badge:
+      'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/70 dark:bg-blue-950/50 dark:text-blue-300',
+  },
+  updated: {
+    label: 'Updated',
+    dot: 'bg-indigo-500',
+    badge:
+      'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/70 dark:bg-indigo-950/50 dark:text-indigo-300',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    dot: 'bg-red-500',
+    badge:
+      'border-red-200 bg-red-50 text-red-700 dark:border-red-900/70 dark:bg-red-950/50 dark:text-red-300',
+  },
+  completed: {
+    label: 'Completed',
+    dot: 'bg-emerald-500',
+    badge:
+      'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/50 dark:text-emerald-300',
+  },
+}
 
 function getBookingStartDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.startTime}:00`)
@@ -29,10 +64,81 @@ function getResourceName(resourceId: string) {
   )
 }
 
+function getRemainingEdits(booking: Booking) {
+  return booking.remainingEdits ?? maxRemainingEdits
+}
+
+function isCompletedBooking(booking: Booking, now: Date) {
+  return getBookingEndDate(booking) < now
+}
+
+function isEditableFutureBooking(booking: Booking, todayDate: string, now: Date) {
+  return (
+    booking.status !== 'cancelled' &&
+    !isCompletedBooking(booking, now) &&
+    booking.date > todayDate &&
+    getRemainingEdits(booking) > 0
+  )
+}
+
+function isActiveDashboardBooking(
+  booking: Booking,
+  todayDate: string,
+  now: Date,
+) {
+  return (
+    booking.status !== 'cancelled' &&
+    !isCompletedBooking(booking, now) &&
+    !isEditableFutureBooking(booking, todayDate, now)
+  )
+}
+
+function formatActivityDate(date: string, todayDate: string) {
+  if (date === todayDate) {
+    return 'today'
+  }
+
+  return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function getActivityMessage(activity: DashboardActivity) {
+  const resourceName = getResourceName(activity.resourceId)
+
+  if (activity.action === 'booked') {
+    return `Booked ${resourceName}.`
+  }
+
+  if (activity.action === 'updated') {
+    return `Updated ${resourceName} booking.`
+  }
+
+  if (activity.action === 'cancelled') {
+    return `Cancelled ${resourceName} booking.`
+  }
+
+  return `Completed ${resourceName} booking.`
+}
+
+function getActivityTime(activity: DashboardActivity, todayDate: string) {
+  const dateLabel = formatActivityDate(activity.date, todayDate)
+
+  return `${dateLabel} · ${activity.startTime} - ${activity.endTime}`
+}
+
+function getActivityTimestamp(activity: DashboardActivity) {
+  return new Date(activity.createdAt).getTime()
+}
+
 export function Dashboard() {
   const [subtitleIndex, setSubtitleIndex] = useState(0)
+  const [todayActiveIndex, setTodayActiveIndex] = useState(0)
   const bookings = getBookings()
+  const activityItems = getActivityItems()
   const now = new Date()
+  const todayDate = getTodayDate()
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -44,26 +150,81 @@ export function Dashboard() {
     return () => window.clearInterval(timer)
   }, [])
 
-  const activeBookings = bookings.filter(
-    (booking) =>
-      booking.status !== 'cancelled' && getBookingEndDate(booking) >= now,
+  const activeBookings = bookings.filter((booking) =>
+    isActiveDashboardBooking(booking, todayDate, now),
   )
 
-  const cancelledBookings = bookings.filter(
-    (booking) => booking.status === 'cancelled',
-  )
-
-  const upcomingBookings = activeBookings
-    .filter((booking) => getBookingStartDate(booking) > now)
+  const upcomingBookings = bookings
+    .filter((booking) => isEditableFutureBooking(booking, todayDate, now))
     .sort(
       (firstBooking, secondBooking) =>
         getBookingStartDate(firstBooking).getTime() -
         getBookingStartDate(secondBooking).getTime(),
     )
 
-  const nextUpcomingBooking = upcomingBookings[0]
-  const resourceTypeCount = new Set(resources.map((resource) => resource.type))
-    .size
+  const cancelledBookings = bookings.filter(
+    (booking) => booking.status === 'cancelled',
+  )
+
+  const completedBookings = bookings.filter(
+    (booking) =>
+      booking.status !== 'cancelled' && isCompletedBooking(booking, now),
+  )
+
+  const todayActiveBookings = activeBookings
+    .filter((booking) => booking.date === todayDate)
+    .sort(
+      (firstBooking, secondBooking) =>
+        getBookingStartDate(firstBooking).getTime() -
+        getBookingStartDate(secondBooking).getTime(),
+    )
+
+  const displayedTodayActiveBooking =
+    todayActiveBookings.length > 0
+      ? todayActiveBookings[todayActiveIndex % todayActiveBookings.length]
+      : undefined
+
+  const completedActivityItems: DashboardActivity[] = completedBookings.map(
+    (booking) => ({
+      id: `completed-${booking.id}`,
+      action: 'completed',
+      resourceId: booking.resourceId,
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      createdAt: getBookingEndDate(booking).toISOString(),
+    }),
+  )
+
+  const recentActivities: DashboardActivity[] = [
+    ...activityItems,
+    ...completedActivityItems,
+  ]
+    .sort(
+      (firstActivity, secondActivity) =>
+        getActivityTimestamp(secondActivity) -
+        getActivityTimestamp(firstActivity),
+    )
+    .slice(0, 5)
+
+  useEffect(() => {
+    if (todayActiveBookings.length <= 1) {
+      setTodayActiveIndex(0)
+      return
+    }
+
+    setTodayActiveIndex(
+      (currentIndex) => currentIndex % todayActiveBookings.length,
+    )
+
+    const timer = window.setInterval(() => {
+      setTodayActiveIndex(
+        (currentIndex) => (currentIndex + 1) % todayActiveBookings.length,
+      )
+    }, 3500)
+
+    return () => window.clearInterval(timer)
+  }, [todayActiveBookings.length])
 
   return (
     <main className="space-y-8 transition-colors duration-300 ease-in-out">
@@ -81,6 +242,18 @@ export function Dashboard() {
             <div className="mt-4 max-w-2xl">
               <style>{`
                 @keyframes dashboard-subtitle-enter {
+                  from {
+                    opacity: 0;
+                    transform: translateY(0.5rem);
+                  }
+
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+
+                @keyframes dashboard-snapshot-enter {
                   from {
                     opacity: 0;
                     transform: translateY(0.5rem);
@@ -125,32 +298,37 @@ export function Dashboard() {
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-100">
               Campus snapshot
             </p>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-white/10 p-4">
-                <p className="text-3xl font-semibold">
-                  {resources.length}
-                </p>
-                <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  Resources
-                </p>
-              </div>
+            <div className="mt-5 space-y-3">
               <div className="rounded-xl bg-white/10 p-4">
                 <p className="text-3xl font-semibold">
                   {activeBookings.length}
                 </p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
-                  Active
+                  Active bookings
                 </p>
               </div>
-              <div className="col-span-2 rounded-xl bg-white/10 p-4">
+              <div className="rounded-xl bg-white/10 p-4">
                 <p className="text-sm font-semibold text-blue-50">
-                  Next step
+                  Active today
                 </p>
-                <p className="mt-1 text-sm leading-6 text-blue-50/80">
-                  {nextUpcomingBooking
-                    ? `${getResourceName(nextUpcomingBooking.resourceId)} is next on your schedule.`
-                    : 'Book a space to start your schedule.'}
-                </p>
+                {displayedTodayActiveBooking ? (
+                  <p
+                    key={displayedTodayActiveBooking.id}
+                    className="mt-1 text-sm leading-6 text-blue-50/80"
+                    style={{
+                      animation:
+                        'dashboard-snapshot-enter 500ms ease-out both',
+                    }}
+                  >
+                    {getResourceName(displayedTodayActiveBooking.resourceId)} at{' '}
+                    {displayedTodayActiveBooking.startTime} -{' '}
+                    {displayedTodayActiveBooking.endTime}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm leading-6 text-blue-50/80">
+                    No active bookings today.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -168,157 +346,79 @@ export function Dashboard() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
-            label="Total Resources"
-            value={resources.length}
-            helperText="Campus spaces and equipment"
-            accent="blue"
-          />
-          <StatCard
             label="Active Bookings"
             value={activeBookings.length}
-            helperText="Current and upcoming bookings"
-            accent="emerald"
-          />
-          <StatCard
-            label="Cancelled Bookings"
-            value={cancelledBookings.length}
-            helperText="Cancelled reservations"
-            accent="red"
+            helperText="Bookings currently in effect"
+            accent="blue"
           />
           <StatCard
             label="Upcoming Bookings"
             value={upcomingBookings.length}
-            helperText="Future reservations"
+            helperText="Future reservations ahead"
             accent="indigo"
+          />
+          <StatCard
+            label="Cancelled Bookings"
+            value={cancelledBookings.length}
+            helperText="Reservations you cancelled"
+            accent="red"
+          />
+          <StatCard
+            label="Completed Bookings"
+            value={completedBookings.length}
+            helperText="Bookings already finished"
+            accent="emerald"
           />
         </div>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[2fr_1fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Next booking
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-              {nextUpcomingBooking
-                ? getResourceName(nextUpcomingBooking.resourceId)
-                : 'No booking scheduled'}
-            </h2>
-          </div>
-
-          {nextUpcomingBooking ? (
-            <dl className="mt-5 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 transition-colors duration-300 ease-in-out sm:grid-cols-2 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-              <div>
-                <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Date
-                </dt>
-                <dd>{nextUpcomingBooking.date}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Time
-                </dt>
-                <dd>
-                  {nextUpcomingBooking.startTime} -{' '}
-                  {nextUpcomingBooking.endTime}
-                </dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Student
-                </dt>
-                <dd>{nextUpcomingBooking.studentName}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold text-slate-900 dark:text-slate-100">
-                  Purpose
-                </dt>
-                <dd>{nextUpcomingBooking.purpose}</dd>
-              </div>
-            </dl>
-          ) : (
-            <div className="mt-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 transition-colors duration-300 ease-in-out dark:border-slate-700 dark:bg-slate-950">
-              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                No booking scheduled
-              </p>
-              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
-                Book a resource to see it here.
-              </p>
-            </div>
-          )}
-        </article>
-
-        <div className="space-y-5">
-          <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Quick Actions
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
-              Quick next steps
-            </h2>
-            <div className="mt-5 flex flex-col gap-3">
-              <Link
-                to="/resources"
-                className="min-h-11 rounded-lg border border-blue-700 px-4 py-3 text-center text-sm font-semibold text-blue-700 transition-colors duration-300 ease-in-out hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:focus:ring-blue-900"
-              >
-                View resources
-              </Link>
-              <Link
-                to="/book"
-                className="min-h-11 rounded-lg bg-blue-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
-              >
-                Book a resource
-              </Link>
-              <Link
-                to="/my-bookings"
-                className="min-h-11 rounded-lg border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 transition-colors duration-300 ease-in-out hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-700"
-              >
-                Manage bookings
-              </Link>
-            </div>
-          </article>
-
-          <article className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-blue-50 p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:from-slate-900 dark:to-blue-950/30 dark:ring-slate-800">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-              Booking status
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
-              Availability summary
-            </h2>
-            <div className="mt-5 space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-600 dark:text-slate-400">
-                  Resource categories
-                </span>
-                <span className="font-semibold text-slate-950 dark:text-white">
-                  {resourceTypeCount}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-600 dark:text-slate-400">
-                  Upcoming
-                </span>
-                <span className="font-semibold text-slate-950 dark:text-white">
-                  {upcomingBookings.length}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-slate-600 dark:text-slate-400">
-                  Cancelled
-                </span>
-                <span className="font-semibold text-slate-950 dark:text-white">
-                  {cancelledBookings.length}
-                </span>
-              </div>
-            </div>
-            <p className="mt-5 rounded-xl bg-white/70 p-4 text-sm leading-6 text-slate-600 transition-colors duration-300 ease-in-out dark:bg-slate-950/70 dark:text-slate-400">
-              {upcomingBookings.length > 0
-                ? 'Review your next booking before heading to campus.'
-                : 'No upcoming reservations yet. Browse resources or create a booking.'}
-            </p>
-          </article>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-white/60 transition-colors duration-300 ease-in-out sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:ring-slate-800">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+            Recent activity
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
+            Your latest booking updates
+          </h2>
         </div>
+        {recentActivities.length > 0 ? (
+          <div className="mt-5 space-y-3">
+            {recentActivities.map((activity) => {
+              const styles = activityStyles[activity.action]
+
+              return (
+                <article
+                  key={`${activity.action}-${activity.id}`}
+                  className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`mt-2 h-2.5 w-2.5 rounded-full ${styles.dot}`}
+                      aria-hidden="true"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {getActivityMessage(activity)}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        {getActivityTime(activity, todayDate)}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${styles.badge}`}
+                  >
+                    {styles.label}
+                  </span>
+                </article>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600 transition-colors duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
+            No activity yet. Create a booking to start your history.
+          </p>
+        )}
       </section>
     </main>
   )
