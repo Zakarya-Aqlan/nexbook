@@ -1,8 +1,18 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatCard } from '../components/StatCard'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import { getBookings } from '../utils/storage'
+
+const dashboardSubtitles = [
+  'Find available campus spaces in seconds.',
+  'Reserve study rooms, labs, and equipment without conflicts.',
+  'Plan your campus bookings with clear real-time availability.',
+  'Choose a resource, pick a time, and confirm your reservation.',
+  'Manage active, cancelled, and completed bookings in one place.',
+  'Book smarter with simple rules and conflict-free scheduling.',
+]
 
 function getBookingStartDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.startTime}:00`)
@@ -20,8 +30,19 @@ function getResourceName(resourceId: string) {
 }
 
 export function Dashboard() {
+  const [subtitleIndex, setSubtitleIndex] = useState(0)
   const bookings = getBookings()
   const now = new Date()
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSubtitleIndex(
+        (currentIndex) => (currentIndex + 1) % dashboardSubtitles.length,
+      )
+    }, 3500)
+
+    return () => window.clearInterval(timer)
+  }, [])
 
   const activeBookings = bookings.filter(
     (booking) =>
@@ -57,10 +78,32 @@ export function Dashboard() {
             <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
               Welcome to NexBook
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
-              View campus resources, create bookings, and track your
-              reservations from one simple student dashboard.
-            </p>
+            <div className="mt-4 max-w-2xl">
+              <style>{`
+                @keyframes dashboard-subtitle-enter {
+                  from {
+                    opacity: 0;
+                    transform: translateY(0.5rem);
+                  }
+
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+              `}</style>
+              <p className="min-h-[4.5rem] text-base leading-7 text-blue-50/85 sm:min-h-14 sm:text-lg">
+                <span
+                  key={subtitleIndex}
+                  className="block"
+                  style={{
+                    animation: 'dashboard-subtitle-enter 500ms ease-out both',
+                  }}
+                >
+                  {dashboardSubtitles[subtitleIndex]}
+                </span>
+              </p>
+            </div>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
