@@ -51,10 +51,10 @@ export function Dashboard() {
         <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent" />
         <div className="relative grid gap-8 lg:grid-cols-[1.45fr_0.9fr] lg:items-center">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-wide text-blue-200">
+            <p className="text-sm font-medium uppercase tracking-wide text-blue-200">
               Dashboard
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
               Welcome to NexBook
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
@@ -84,13 +84,17 @@ export function Dashboard() {
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-white/10 p-4">
-                <p className="text-3xl font-bold">{resources.length}</p>
+                <p className="text-3xl font-semibold">
+                  {resources.length}
+                </p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
                   resources
                 </p>
               </div>
               <div className="rounded-xl bg-white/10 p-4">
-                <p className="text-3xl font-bold">{activeBookings.length}</p>
+                <p className="text-3xl font-semibold">
+                  {activeBookings.length}
+                </p>
                 <p className="mt-1 text-xs font-medium text-blue-50/80">
                   active
                 </p>
@@ -112,10 +116,10 @@ export function Dashboard() {
 
       <section className="space-y-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
+          <p className="text-sm font-medium uppercase tracking-wide text-blue-700 dark:text-blue-400">
             Overview
           </p>
-          <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
             Your campus booking workspace
           </h2>
         </div>
@@ -153,7 +157,7 @@ export function Dashboard() {
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
               Next Upcoming Booking
             </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
               {nextUpcomingBooking
                 ? getResourceName(nextUpcomingBooking.resourceId)
                 : 'No upcoming booking'}
@@ -207,7 +211,7 @@ export function Dashboard() {
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
               Quick Actions
             </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 dark:text-white">
               Move your booking forward
             </h2>
             <div className="mt-5 flex flex-col gap-3">
@@ -236,7 +240,7 @@ export function Dashboard() {
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
               Booking Health
             </p>
-            <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
               Availability summary
             </h2>
             <div className="mt-5 space-y-3 text-sm">
