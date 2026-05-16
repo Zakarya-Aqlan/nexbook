@@ -195,7 +195,13 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     setForm((currentForm) => ({
       ...currentForm,
-      resourceId: currentForm.resourceId || initialResourceId,
+      resourceId: initialResourceId,
+      startTime:
+        currentForm.resourceId === initialResourceId
+          ? currentForm.startTime
+          : '',
+      endTime:
+        currentForm.resourceId === initialResourceId ? currentForm.endTime : '',
     }))
   }, [initialResourceId])
 

@@ -61,13 +61,7 @@ function getBookingGroup(booking: Booking, todayDate = getTodayDate()): BookingF
 }
 
 function getDisplayStatus(booking: Booking) {
-  const bookingGroup = getBookingGroup(booking)
-
-  if (bookingGroup === 'Cancelled' || bookingGroup === 'Completed') {
-    return bookingGroup
-  }
-
-  return booking.status === 'approved' ? 'Approved' : 'Pending'
+  return getBookingGroup(booking)
 }
 
 function getResourceName(resourceId: string) {
