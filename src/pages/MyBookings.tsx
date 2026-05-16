@@ -28,30 +28,33 @@ import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 import { formatStudentIdForDisplay } from '../utils/studentIdUtils'
 import type { ResourceSelectLabels } from '../components/ResourceSelect'
 
-type BookingFilter = 'Active' | 'Cancelled' | 'Completed'
+type BookingFilter = 'Active' | 'Upcoming' | 'Cancelled' | 'Completed'
 
 type EditFormValues = {
   resourceId: string
   date: string
   startTime: string
   endTime: string
-  purpose: string
 }
 
-const filters: BookingFilter[] = ['Active', 'Cancelled', 'Completed']
+const filters: BookingFilter[] = ['Active', 'Upcoming', 'Cancelled', 'Completed']
 const maxRemainingEdits = 2
 
 function getBookingEndDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.endTime}:00`)
 }
 
-function getBookingGroup(booking: Booking): BookingFilter {
+function getBookingGroup(booking: Booking, todayDate = getTodayDate()): BookingFilter {
   if (booking.status === 'cancelled') {
     return 'Cancelled'
   }
 
   if (getBookingEndDate(booking) < new Date()) {
     return 'Completed'
+  }
+
+  if (booking.date > todayDate) {
+    return 'Upcoming'
   }
 
   return 'Active'
@@ -72,14 +75,6 @@ function getResourceName(resourceId: string) {
     resources.find((resource) => resource.id === resourceId)?.name ??
     'Unknown resource'
   )
-}
-
-function getPurposeError(purpose: string) {
-  if (!purpose || /^[A-Za-z0-9 .,!?'"():;&/\-\r\n]+$/.test(purpose)) {
-    return ''
-  }
-
-  return 'Purpose: use letters, numbers, spaces, and basic punctuation.'
 }
 
 function getSlotWord(count: number) {
@@ -139,7 +134,6 @@ export function MyBookings() {
     date: '',
     startTime: '',
     endTime: '',
-    purpose: '',
   })
   const [editDuration, setEditDuration] = useState(60)
   const [message, setMessage] = useState('')
@@ -176,16 +170,18 @@ export function MyBookings() {
       filters.reduce<Record<BookingFilter, number>>(
         (counts, filter) => ({
           ...counts,
-          [filter]: bookings.filter((booking) => getBookingGroup(booking) === filter)
+          [filter]: bookings.filter(
+            (booking) => getBookingGroup(booking, todayDate) === filter,
+          )
             .length,
         }),
-        { Active: 0, Cancelled: 0, Completed: 0 },
+        { Active: 0, Upcoming: 0, Cancelled: 0, Completed: 0 },
       ),
-    [bookings],
+    [bookings, todayDate],
   )
 
   const filteredBookings = bookings.filter(
-    (booking) => getBookingGroup(booking) === selectedFilter,
+    (booking) => getBookingGroup(booking, todayDate) === selectedFilter,
   )
 
   const selectedResource = resources.find(
@@ -249,7 +245,6 @@ export function MyBookings() {
       date: booking.date,
       startTime: booking.startTime,
       endTime: booking.endTime,
-      purpose: booking.purpose,
     })
     setEditDuration([60, 120, 180].includes(bookingDuration) ? bookingDuration : 60)
     setMessage('')
@@ -263,7 +258,6 @@ export function MyBookings() {
       date: '',
       startTime: '',
       endTime: '',
-      purpose: '',
     })
     setEditDuration(60)
     setErrorMessage('')
@@ -306,10 +300,6 @@ export function MyBookings() {
 
     if (!editForm.endTime) {
       return 'Choose an end time.'
-    }
-
-    if (!editForm.purpose.trim()) {
-      return 'Enter a purpose.'
     }
 
     return null
@@ -370,8 +360,7 @@ export function MyBookings() {
       bookingToEdit.resourceId !== editForm.resourceId ||
       bookingToEdit.date !== editForm.date ||
       bookingToEdit.startTime !== editForm.startTime ||
-      bookingToEdit.endTime !== editForm.endTime ||
-      bookingToEdit.purpose !== editForm.purpose.trim()
+      bookingToEdit.endTime !== editForm.endTime
 
     if (!hasEditChanges) {
       setMessage('')
@@ -386,20 +375,12 @@ export function MyBookings() {
       return
     }
 
-    const purposeError = getPurposeError(editForm.purpose)
-
-    if (purposeError) {
-      setErrorMessage(purposeError)
-      return
-    }
-
     const updatedBooking: Booking = {
       ...bookingToEdit,
       resourceId: editForm.resourceId,
       date: editForm.date,
       startTime: editForm.startTime,
       endTime: editForm.endTime,
-      purpose: editForm.purpose.trim(),
     }
 
     const otherBookings = bookings.filter(
@@ -531,11 +512,9 @@ export function MyBookings() {
       ) : (
         <section className="space-y-4">
           {filteredBookings.map((booking) => {
-            const bookingGroup = getBookingGroup(booking)
+            const bookingGroup = getBookingGroup(booking, todayDate)
             const isEditing = editingBookingId === booking.id
-            const isSameDayBooking = booking.date === todayDate
-            const isFutureActiveBooking =
-              bookingGroup === 'Active' && !isSameDayBooking
+            const isUpcomingBooking = bookingGroup === 'Upcoming'
             const remainingEdits = getRemainingEdits(booking)
 
             return (
@@ -545,10 +524,12 @@ export function MyBookings() {
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
                   displayStatus={getDisplayStatus(booking)}
-                  canEdit={isFutureActiveBooking && remainingEdits > 0}
-                  canCancel={bookingGroup === 'Active'}
+                  canEdit={isUpcomingBooking && remainingEdits > 0}
+                  canCancel={
+                    bookingGroup === 'Active' || bookingGroup === 'Upcoming'
+                  }
                   remainingEdits={
-                    isFutureActiveBooking ? remainingEdits : undefined
+                    isUpcomingBooking ? remainingEdits : undefined
                   }
                   onCancel={handleCancelBooking}
                   onEdit={startEditing}
@@ -631,19 +612,6 @@ export function MyBookings() {
                         }}
                       />
                     </section>
-
-                    <label className="space-y-2">
-                      <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                        Purpose
-                      </span>
-                      <textarea
-                        value={editForm.purpose}
-                        onChange={(event) =>
-                          updateEditField('purpose', event.target.value)
-                        }
-                        className="min-h-28 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm leading-6 text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                      />
-                    </label>
 
                     {errorMessage && (
                       <p className="rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">

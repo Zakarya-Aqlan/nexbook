@@ -3,7 +3,7 @@ import type { Booking } from '../types'
 type BookingCardProps = {
   booking: Booking
   resourceName: string
-  groupLabel: 'Active' | 'Cancelled' | 'Completed'
+  groupLabel: 'Active' | 'Upcoming' | 'Cancelled' | 'Completed'
   displayStatus: string
   canEdit: boolean
   canCancel: boolean
@@ -14,6 +14,8 @@ type BookingCardProps = {
 
 const statusStyles = {
   Active: 'bg-blue-50 text-blue-700 ring-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-900',
+  Upcoming:
+    'bg-indigo-50 text-indigo-700 ring-indigo-100 dark:bg-indigo-950 dark:text-indigo-300 dark:ring-indigo-900',
   Cancelled:
     'bg-red-50 text-red-700 ring-red-100 dark:bg-red-950 dark:text-red-300 dark:ring-red-900',
   Completed:
@@ -50,7 +52,7 @@ export function BookingCard({
         </span>
       </div>
 
-      {groupLabel === 'Active' && remainingEdits !== undefined && (
+      {remainingEdits !== undefined && (
         <p className="mt-4 w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 transition-colors duration-300 ease-in-out dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
           {remainingEdits > 0
             ? `Edits left: ${remainingEdits}`
@@ -70,12 +72,6 @@ export function BookingCard({
             Status
           </dt>
           <dd>{displayStatus}</dd>
-        </div>
-        <div className="sm:col-span-2">
-          <dt className="font-semibold text-slate-900 dark:text-slate-100">
-            Purpose
-          </dt>
-          <dd className="leading-6">{booking.purpose}</dd>
         </div>
       </dl>
 
