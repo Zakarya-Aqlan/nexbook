@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ResourceCard } from '../components/ResourceCard'
@@ -15,8 +15,28 @@ const filters: { label: string; value: ResourceFilter }[] = [
   { label: 'Sports', value: 'sports' },
 ]
 
+const resourceSubtitles = [
+  'Browse spaces built for study, teamwork, and practice.',
+  'Find rooms, labs, equipment, and sports facilities in one place.',
+  'Choose the right resource before you book a slot.',
+  'Explore clear details and simple booking actions.',
+  'Move from browsing to booking without wasting time.',
+  'Find the resource for your next campus task.',
+]
+
 export function Resources() {
   const [selectedType, setSelectedType] = useState<ResourceFilter>('all')
+  const [subtitleIndex, setSubtitleIndex] = useState(0)
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setSubtitleIndex(
+        (currentIndex) => (currentIndex + 1) % resourceSubtitles.length,
+      )
+    }, 3500)
+
+    return () => window.clearInterval(timer)
+  }, [])
 
   const filteredResources =
     selectedType === 'all'
@@ -36,10 +56,32 @@ export function Resources() {
             <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
               Campus Resources
             </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-blue-50/85 sm:text-lg">
-              Browse spaces, labs, equipment, and sports facilities for your
-              next task.
-            </p>
+            <div className="mt-4 max-w-2xl">
+              <style>{`
+                @keyframes resources-subtitle-enter {
+                  from {
+                    opacity: 0;
+                    transform: translateY(0.5rem);
+                  }
+
+                  to {
+                    opacity: 1;
+                    transform: translateY(0);
+                  }
+                }
+              `}</style>
+              <p className="min-h-[4.5rem] text-base leading-7 text-blue-50/85 sm:min-h-14 sm:text-lg">
+                <span
+                  key={subtitleIndex}
+                  className="block"
+                  style={{
+                    animation: 'resources-subtitle-enter 500ms ease-out both',
+                  }}
+                >
+                  {resourceSubtitles[subtitleIndex]}
+                </span>
+              </p>
+            </div>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/book"
