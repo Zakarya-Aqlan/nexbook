@@ -5,7 +5,6 @@ import { BookResource } from './pages/BookResource'
 import { Dashboard } from './pages/Dashboard'
 import { MyBookings } from './pages/MyBookings'
 import { Resources } from './pages/Resources'
-import './App.css'
 
 function App() {
   return (
