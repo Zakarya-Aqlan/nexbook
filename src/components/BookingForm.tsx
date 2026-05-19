@@ -42,30 +42,33 @@ type BookingFormValues = {
   endTime: string
 }
 
-type BookingDraft = BookingFormValues & {
-  selectedDuration: number
-}
+type BookingIdentityDraft = Pick<BookingFormValues, 'studentName' | 'studentId'>
 
-const emptyForm: BookingFormValues = {
-  studentName: '',
-  studentId: '',
-  resourceId: '',
-  date: '',
-  startTime: '',
-  endTime: '',
+type ResourceAvailabilityDraft = Pick<
+  BookingFormValues,
+  'resourceId' | 'date' | 'startTime' | 'endTime'
+> & {
+  selectedDuration: number
 }
 
 const bookingDraftKey = 'nexbook-booking-draft'
 const defaultBookingDuration = 60
 
-function getSavedBookingDraft(): BookingDraft {
+const emptyResourceAvailabilityDraft: ResourceAvailabilityDraft = {
+  resourceId: '',
+  date: '',
+  startTime: '',
+  endTime: '',
+  selectedDuration: defaultBookingDuration,
+}
+
+let resourceAvailabilityDraft = emptyResourceAvailabilityDraft
+
+function getSavedBookingDraft(): BookingIdentityDraft {
   const savedDraft = localStorage.getItem(bookingDraftKey)
 
   if (!savedDraft) {
-    return {
-      ...emptyForm,
-      selectedDuration: defaultBookingDuration,
-    }
+    return { studentName: '', studentId: '' }
   }
 
   try {
@@ -76,32 +79,28 @@ function getSavedBookingDraft(): BookingDraft {
         studentName:
           typeof draft.studentName === 'string' ? draft.studentName : '',
         studentId: typeof draft.studentId === 'string' ? draft.studentId : '',
-        resourceId:
-          typeof draft.resourceId === 'string' ? draft.resourceId : '',
-        date: typeof draft.date === 'string' ? draft.date : '',
-        startTime:
-          typeof draft.startTime === 'string' ? draft.startTime : '',
-        endTime: typeof draft.endTime === 'string' ? draft.endTime : '',
-        selectedDuration: [60, 120, 180].includes(draft.selectedDuration)
-          ? draft.selectedDuration
-          : defaultBookingDuration,
       }
     }
   } catch {
-    return {
-      ...emptyForm,
-      selectedDuration: defaultBookingDuration,
-    }
+    return { studentName: '', studentId: '' }
   }
 
-  return {
-    ...emptyForm,
-    selectedDuration: defaultBookingDuration,
-  }
+  return { studentName: '', studentId: '' }
 }
 
-function saveBookingDraft(draft: BookingDraft) {
-  localStorage.setItem(bookingDraftKey, JSON.stringify(draft))
+function saveBookingDraft(draft: BookingIdentityDraft) {
+  localStorage.setItem(
+    bookingDraftKey,
+    JSON.stringify({
+      studentName: draft.studentName,
+      studentId: draft.studentId,
+      resourceId: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      selectedDuration: defaultBookingDuration,
+    }),
+  )
 }
 
 function getStudentNameError(studentName: string) {
@@ -171,10 +170,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     return {
       studentName: savedDraft.studentName,
       studentId: getStudentIdDigits(savedDraft.studentId),
-      resourceId: savedDraft.resourceId,
-      date: savedDraft.date,
-      startTime: savedDraft.startTime,
-      endTime: savedDraft.endTime,
+      resourceId: resourceAvailabilityDraft.resourceId,
+      date: resourceAvailabilityDraft.date,
+      startTime: resourceAvailabilityDraft.startTime,
+      endTime: resourceAvailabilityDraft.endTime,
     }
   })
   const [errorMessage, setErrorMessage] = useState('')
@@ -182,7 +181,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [pendingSameDayBooking, setPendingSameDayBooking] =
     useState<Booking | null>(null)
   const [selectedDuration, setSelectedDuration] = useState(
-    () => getSavedBookingDraft().selectedDuration,
+    () => resourceAvailabilityDraft.selectedDuration,
   )
   useEffect(() => {
     const resourceExists = resources.some(
@@ -207,9 +206,16 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
   useEffect(() => {
     saveBookingDraft({
-      ...form,
-      selectedDuration,
+      studentName: form.studentName,
+      studentId: form.studentId,
     })
+    resourceAvailabilityDraft = {
+      resourceId: form.resourceId,
+      date: form.date,
+      startTime: form.startTime,
+      endTime: form.endTime,
+      selectedDuration,
+    }
   }, [form, selectedDuration])
 
   const selectedResource = useMemo(
