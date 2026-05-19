@@ -142,7 +142,9 @@ export function ResourceSelect({
         <span className="min-w-0">
           <span
             className={
-              selectedResource
+              disabled
+                ? 'block truncate font-medium text-slate-400 dark:text-slate-600'
+                : selectedResource
                 ? 'block truncate font-medium text-slate-900 dark:text-slate-100'
                 : 'block truncate text-slate-400 dark:text-slate-500'
             }

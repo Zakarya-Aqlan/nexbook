@@ -501,7 +501,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           <ResourceSelect
             label="Resource"
             resources={resources}
-            value={form.date ? form.resourceId : ''}
+            value={form.resourceId}
             unavailableResourceIds={
               form.date ? unavailableSelectedDateResourceIds : []
             }
