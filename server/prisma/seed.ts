@@ -1,0 +1,169 @@
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+const resources = [
+  {
+    id: 'study-pod-a',
+    name: 'Study Pod A',
+    category: 'room',
+    location: 'Library Level 2',
+    capacity: 2,
+    openTime: '08:00',
+    closeTime: '22:00',
+    description: 'Quiet space for focused study or one-on-one work.',
+  },
+  {
+    id: 'project-room-b',
+    name: 'Project Room B',
+    category: 'room',
+    location: 'Innovation Hub Level 3',
+    capacity: 6,
+    openTime: '09:00',
+    closeTime: '21:00',
+    description: 'Group room with a whiteboard and shared display.',
+  },
+  {
+    id: 'mac-lab',
+    name: 'Mac Lab',
+    category: 'lab',
+    location: 'Design Block Level 1',
+    capacity: 24,
+    openTime: '08:30',
+    closeTime: '20:30',
+    description: 'Mac workstations for design and media projects.',
+  },
+  {
+    id: 'camera-kit',
+    name: 'Camera Kit',
+    category: 'equipment',
+    location: 'Media Office Level 2',
+    capacity: 1,
+    openTime: '10:00',
+    closeTime: '18:00',
+    description: 'DSLR kit for student projects and event coverage.',
+  },
+  {
+    id: 'presentation-room',
+    name: 'Presentation Room',
+    category: 'room',
+    location: 'Business School Level 4',
+    capacity: 20,
+    openTime: '09:00',
+    closeTime: '20:00',
+    description: 'Projector-ready room for rehearsals and presentations.',
+  },
+  {
+    id: 'discussion-room',
+    name: 'Discussion Room',
+    category: 'room',
+    location: 'Student Centre Level 1',
+    capacity: 8,
+    openTime: '08:00',
+    closeTime: '22:00',
+    description: 'Casual space for team discussions and peer learning.',
+  },
+  {
+    id: 'group-study-room-c',
+    name: 'Group Study Room C',
+    category: 'room',
+    location: 'Library Level 3',
+    capacity: 10,
+    openTime: '08:00',
+    closeTime: '22:00',
+    description: 'Mid-sized room for group study and collaboration.',
+  },
+  {
+    id: 'podcast-room',
+    name: 'Podcast Room',
+    category: 'room',
+    location: 'Media Centre Level 1',
+    capacity: 4,
+    openTime: '09:00',
+    closeTime: '19:00',
+    description: 'Soundproof room for podcasts and interviews.',
+  },
+  {
+    id: 'vr-lab',
+    name: 'VR Lab',
+    category: 'lab',
+    location: 'Tech Hub Level 2',
+    capacity: 8,
+    openTime: '09:00',
+    closeTime: '20:00',
+    description: 'VR headsets for design, simulation, and research.',
+  },
+  {
+    id: 'robotics-lab',
+    name: 'Robotics Lab',
+    category: 'lab',
+    location: 'Engineering Block Level 3',
+    capacity: 16,
+    openTime: '09:00',
+    closeTime: '19:00',
+    description: 'Workbenches and kits for robotics projects.',
+  },
+  {
+    id: 'podcast-mic-kit',
+    name: 'Podcast Mic Kit',
+    category: 'equipment',
+    location: 'Media Office Level 2',
+    capacity: 1,
+    openTime: '10:00',
+    closeTime: '18:00',
+    description: 'Portable microphones for podcasts and voice-overs.',
+  },
+  {
+    id: 'futsal-court',
+    name: 'Futsal Court',
+    category: 'sports',
+    location: 'Sports Complex Ground Floor',
+    capacity: 14,
+    openTime: '07:00',
+    closeTime: '22:00',
+    description: 'Indoor court for casual matches and training.',
+  },
+  {
+    id: 'basketball-court',
+    name: 'Basketball Court',
+    category: 'sports',
+    location: 'Sports Complex Level 1',
+    capacity: 20,
+    openTime: '07:00',
+    closeTime: '22:00',
+    description: 'Full-sized indoor court for games and practice.',
+  },
+  {
+    id: 'badminton-court',
+    name: 'Badminton Court',
+    category: 'sports',
+    location: 'Sports Complex Level 2',
+    capacity: 4,
+    openTime: '07:00',
+    closeTime: '22:00',
+    description: 'Single court for recreational play and practice.',
+  },
+]
+
+async function main() {
+  for (const resource of resources) {
+    await prisma.resource.upsert({
+      where: {
+        id: resource.id,
+      },
+      update: resource,
+      create: resource,
+    })
+  }
+
+  console.log(`Seeded ${resources.length} resources.`)
+}
+
+main()
+  .catch((error) => {
+    console.error('Seed failed:', error)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
