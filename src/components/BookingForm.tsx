@@ -433,7 +433,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                   updateField('studentName', event.target.value)
                 }
                 className="min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-blue-500 dark:focus:ring-blue-900"
-                placeholder="Zakarya Aqlan"
+                placeholder="Enter student name"
               />
               {studentNameError && (
                 <p className="rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300">
@@ -458,7 +458,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
                     updateField('studentId', getStudentIdDigits(event.target.value))
                   }
                   className="min-h-11 min-w-0 flex-1 border-0 bg-transparent px-3.5 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
-                  placeholder="085953"
+                  placeholder="123456"
                   aria-label="Student ID digits"
                 />
               </div>

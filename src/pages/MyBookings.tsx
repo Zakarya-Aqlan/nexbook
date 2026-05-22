@@ -497,11 +497,13 @@ export function MyBookings() {
         <EmptyState
           title="No bookings yet"
           message="Create a booking to see it here."
+          showBadge={false}
         />
       ) : filteredBookings.length === 0 ? (
         <EmptyState
           title={`No ${selectedFilter.toLowerCase()} bookings`}
           message="Try another filter."
+          showBadge={false}
         />
       ) : (
         <section className="space-y-4">
