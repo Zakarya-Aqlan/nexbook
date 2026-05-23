@@ -25,6 +25,14 @@ type ResourceHours = {
   closeTime: string
 }
 
+type DateParts = {
+  year: number
+  month: number
+  day: number
+}
+
+const allowedDurations = [60, 120, 180]
+
 export function validateBookingInput(input: unknown): BookingValidationResult {
   const errors: string[] = []
 
@@ -45,6 +53,7 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
   const endTime = getRequiredString(data, 'endTime', errors)
   const duration = getRequiredNumber(data, 'duration', errors)
   const studentId = normalizeStudentId(rawStudentId)
+  const bookingDate = date ? getDateParts(date) : null
 
   if (studentName && !/^[A-Za-z ]+$/.test(studentName)) {
     errors.push('Student name can only contain letters and spaces.')
@@ -54,8 +63,12 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
     errors.push('Student ID must be TP followed by exactly 6 digits.')
   }
 
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    errors.push('Date must use YYYY-MM-DD format.')
+  if (date && !bookingDate) {
+    errors.push('Date must be a real calendar date in YYYY-MM-DD format.')
+  }
+
+  if (bookingDate && compareDateParts(bookingDate, getTodayDateParts()) < 0) {
+    errors.push('Choose today or a future date.')
   }
 
   if (startTime && !isValidTime(startTime)) {
@@ -66,8 +79,18 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
     errors.push('End time must use HH:mm format.')
   }
 
-  if (duration !== null && (duration < 60 || duration > 180)) {
-    errors.push('Duration must be between 60 and 180 minutes.')
+  if (duration !== null && !allowedDurations.includes(duration)) {
+    errors.push('Duration must be 1, 2, or 3 hours.')
+  }
+
+  if (
+    bookingDate &&
+    startTime &&
+    isValidTime(startTime) &&
+    isToday(bookingDate) &&
+    timeToMinutes(startTime) < getCurrentTimeMinutes()
+  ) {
+    errors.push('Start time cannot be in the past.')
   }
 
   if (errors.length > 0 || duration === null || !studentId) {
@@ -164,15 +187,75 @@ function normalizeStudentId(studentId: string) {
     return trimmedStudentId
   }
 
-  if (/^\d{6}$/.test(trimmedStudentId)) {
-    return `TP${trimmedStudentId}`
-  }
-
   return ''
 }
 
 function isValidTime(time: string) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(time)
+}
+
+function getDateParts(date: string): DateParts | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+
+  if (!match) {
+    return null
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+
+  if (month < 1 || month > 12) {
+    return null
+  }
+
+  if (day < 1 || day > getDaysInMonth(year, month)) {
+    return null
+  }
+
+  return { year, month, day }
+}
+
+function getDaysInMonth(year: number, month: number) {
+  const daysByMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+  return daysByMonth[month - 1]
+}
+
+function isLeapYear(year: number) {
+  return year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0)
+}
+
+function getTodayDateParts(): DateParts {
+  const today = new Date()
+
+  return {
+    year: today.getFullYear(),
+    month: today.getMonth() + 1,
+    day: today.getDate(),
+  }
+}
+
+function compareDateParts(first: DateParts, second: DateParts) {
+  if (first.year !== second.year) {
+    return first.year - second.year
+  }
+
+  if (first.month !== second.month) {
+    return first.month - second.month
+  }
+
+  return first.day - second.day
+}
+
+function isToday(date: DateParts) {
+  return compareDateParts(date, getTodayDateParts()) === 0
+}
+
+function getCurrentTimeMinutes() {
+  const now = new Date()
+
+  return now.getHours() * 60 + now.getMinutes()
 }
 
 function timeToMinutes(time: string) {
