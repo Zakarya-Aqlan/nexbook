@@ -6,6 +6,7 @@ import {
   getAllBookings,
   updateBookingWithValidation,
 } from '../services/bookingService'
+import { AppError } from '../middleware/errorHandler'
 
 export async function getBookings(
   _request: Request,
@@ -41,8 +42,9 @@ export async function updateBookingById(
   next: NextFunction,
 ) {
   try {
+    const bookingId = getRouteId(request)
     const booking = await updateBookingWithValidation(
-      request.params.id,
+      bookingId,
       request.body,
     )
 
@@ -58,10 +60,21 @@ export async function cancelBookingById(
   next: NextFunction,
 ) {
   try {
-    const booking = await cancelBooking(request.params.id)
+    const bookingId = getRouteId(request)
+    const booking = await cancelBooking(bookingId)
 
     response.json({ data: booking })
   } catch (error) {
     next(error)
   }
+}
+
+function getRouteId(request: Request) {
+  const { id } = request.params
+
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new AppError(400, 'A valid booking id is required.')
+  }
+
+  return id
 }

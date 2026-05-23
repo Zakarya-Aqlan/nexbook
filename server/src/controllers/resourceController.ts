@@ -29,9 +29,10 @@ export async function getResourceById(
   next: NextFunction,
 ) {
   try {
+    const resourceId = getRouteId(request)
     const resource = await prisma.resource.findUnique({
       where: {
-        id: request.params.id,
+        id: resourceId,
       },
     })
 
@@ -43,4 +44,14 @@ export async function getResourceById(
   } catch (error) {
     next(error)
   }
+}
+
+function getRouteId(request: Request) {
+  const { id } = request.params
+
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new AppError(400, 'A valid resource id is required.')
+  }
+
+  return id
 }
