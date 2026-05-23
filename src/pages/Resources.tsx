@@ -2,10 +2,20 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ResourceCard } from '../components/ResourceCard'
-import { resources } from '../data/resources'
-import type { ResourceType } from '../types'
+import { resources as mockResources } from '../data/resources'
+import type { Resource, ResourceType } from '../types'
 
 type ResourceFilter = 'all' | ResourceType
+type ApiResource = {
+  id: unknown
+  name: unknown
+  category: unknown
+  location: unknown
+  capacity: unknown
+  openTime: unknown
+  closeTime: unknown
+  description: unknown
+}
 
 const filters: { label: string; value: ResourceFilter }[] = [
   { label: 'All', value: 'all' },
@@ -24,9 +34,90 @@ const resourceSubtitles = [
   'Find the resource for your next campus task.',
 ]
 
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+
+function isResourceType(value: unknown): value is ResourceType {
+  return (
+    value === 'room' ||
+    value === 'lab' ||
+    value === 'equipment' ||
+    value === 'sports'
+  )
+}
+
+function isApiResource(value: unknown): value is ApiResource {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'name' in value &&
+    'category' in value &&
+    'location' in value &&
+    'capacity' in value &&
+    'openTime' in value &&
+    'closeTime' in value &&
+    'description' in value
+  )
+}
+
+function mapApiResource(resource: unknown): Resource | null {
+  if (!isApiResource(resource) || !isResourceType(resource.category)) {
+    return null
+  }
+
+  if (
+    typeof resource.id !== 'string' ||
+    typeof resource.name !== 'string' ||
+    typeof resource.location !== 'string' ||
+    typeof resource.capacity !== 'number' ||
+    typeof resource.openTime !== 'string' ||
+    typeof resource.closeTime !== 'string' ||
+    typeof resource.description !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    id: resource.id,
+    name: resource.name,
+    type: resource.category,
+    location: resource.location,
+    capacity: resource.capacity,
+    openingTime: resource.openTime,
+    closingTime: resource.closeTime,
+    description: resource.description,
+  }
+}
+
+function mapApiResources(responseBody: unknown): Resource[] {
+  if (
+    typeof responseBody !== 'object' ||
+    responseBody === null ||
+    !('data' in responseBody) ||
+    !Array.isArray(responseBody.data)
+  ) {
+    throw new Error('Resources response was not usable.')
+  }
+
+  const mappedResources = responseBody.data.map(mapApiResource)
+
+  if (mappedResources.some((resource) => resource === null)) {
+    throw new Error('Resources response included invalid resources.')
+  }
+
+  return mappedResources.filter(
+    (resource): resource is Resource => resource !== null,
+  )
+}
+
 export function Resources() {
   const [selectedType, setSelectedType] = useState<ResourceFilter>('all')
   const [subtitleIndex, setSubtitleIndex] = useState(0)
+  const [resources, setResources] = useState<Resource[]>(mockResources)
+  const [isLoadingResources, setIsLoadingResources] = useState(true)
+  const [isUsingFallbackResources, setIsUsingFallbackResources] =
+    useState(false)
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -36,6 +127,45 @@ export function Resources() {
     }, 3500)
 
     return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadResources() {
+      try {
+        const response = await fetch(
+          `${apiBaseUrl.replace(/\/$/, '')}/api/resources`,
+        )
+
+        if (!response.ok) {
+          throw new Error('Resources request failed.')
+        }
+
+        const responseBody: unknown = await response.json()
+        const apiResources = mapApiResources(responseBody)
+
+        if (isMounted) {
+          setResources(apiResources)
+          setIsUsingFallbackResources(false)
+        }
+      } catch {
+        if (isMounted) {
+          setResources(mockResources)
+          setIsUsingFallbackResources(true)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingResources(false)
+        }
+      }
+    }
+
+    loadResources()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredResources =
@@ -123,6 +253,18 @@ export function Resources() {
             Find the right resource
           </h2>
         </div>
+
+        {isLoadingResources && (
+          <p className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300">
+            Loading resources...
+          </p>
+        )}
+
+        {!isLoadingResources && isUsingFallbackResources && (
+          <p className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+            Using local sample resources because the backend is unavailable.
+          </p>
+        )}
 
         <div
           className="flex flex-wrap gap-2 rounded-2xl border border-white/70 bg-white p-2 shadow-sm ring-1 ring-slate-200/70 transition-colors duration-300 ease-in-out dark:border-slate-800/80 dark:bg-slate-900 dark:ring-slate-800"
