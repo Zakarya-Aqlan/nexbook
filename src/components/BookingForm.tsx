@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
@@ -51,8 +51,32 @@ type ResourceAvailabilityDraft = Pick<
   selectedDuration: number
 }
 
+type CreateBookingPayload = {
+  studentName: string
+  studentId: string
+  resourceId: string
+  date: string
+  startTime: string
+  endTime: string
+  duration: number
+}
+
+type CreateBookingApiResult = {
+  bookingId: string | null
+  usedFallback: boolean
+}
+
+type ApiErrorBody = {
+  error?: {
+    message?: unknown
+    details?: unknown
+  }
+}
+
 const bookingDraftKey = 'nexbook-booking-draft'
 const defaultBookingDuration = 60
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 
 const emptyResourceAvailabilityDraft: ResourceAvailabilityDraft = {
   resourceId: '',
@@ -123,6 +147,94 @@ function getSlotWord(count: number) {
   return count === 1 ? 'slot' : 'slots'
 }
 
+function timeToMinutes(time: string) {
+  const [hours, minutes] = time.split(':').map(Number)
+
+  return hours * 60 + minutes
+}
+
+function getBookingDurationMinutes(booking: Booking) {
+  return timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime)
+}
+
+function getApiUrl(path: string) {
+  return `${apiBaseUrl.replace(/\/$/, '')}${path}`
+}
+
+function getApiErrorMessage(errorBody: unknown) {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return 'Booking could not be created.'
+  }
+
+  const { error } = errorBody as ApiErrorBody
+  const message =
+    error && typeof error.message === 'string' ? error.message : ''
+  const details = Array.isArray(error?.details)
+    ? error.details.filter((detail): detail is string => typeof detail === 'string')
+    : []
+
+  return [message, ...details].filter(Boolean).join('\n') ||
+    'Booking could not be created.'
+}
+
+async function createBookingWithApi(
+  booking: Booking,
+): Promise<CreateBookingApiResult> {
+  const payload: CreateBookingPayload = {
+    studentName: booking.studentName,
+    studentId: booking.studentId,
+    resourceId: booking.resourceId,
+    date: booking.date,
+    startTime: booking.startTime,
+    endTime: booking.endTime,
+    duration: getBookingDurationMinutes(booking),
+  }
+
+  let response: Response
+
+  try {
+    response = await fetch(getApiUrl('/api/bookings'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch {
+    return {
+      bookingId: null,
+      usedFallback: true,
+    }
+  }
+
+  const responseBody: unknown = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(responseBody))
+  }
+
+  if (
+    responseBody &&
+    typeof responseBody === 'object' &&
+    'data' in responseBody &&
+    responseBody.data &&
+    typeof responseBody.data === 'object' &&
+    'id' in responseBody.data &&
+    typeof responseBody.data.id === 'string' &&
+    responseBody.data.id.trim()
+  ) {
+    return {
+      bookingId: responseBody.data.id,
+      usedFallback: false,
+    }
+  }
+
+  return {
+    bookingId: null,
+    usedFallback: false,
+  }
+}
+
 function getResourceAvailabilityLabel(
   minimumSlotCount: number,
   selectedDurationSlotCount: number,
@@ -180,6 +292,9 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null)
   const [pendingSameDayBooking, setPendingSameDayBooking] =
     useState<Booking | null>(null)
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false)
+  const [fallbackMessage, setFallbackMessage] = useState('')
+  const isSubmittingBookingRef = useRef(false)
   const [selectedDuration, setSelectedDuration] = useState(
     () => resourceAvailabilityDraft.selectedDuration,
   )
@@ -282,6 +397,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       [field]: value,
     }))
     setErrorMessage('')
+    setFallbackMessage('')
   }
 
   function getRequiredFieldError() {
@@ -312,10 +428,11 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     return null
   }
 
-  function saveBooking(booking: Booking) {
+  function saveBooking(booking: Booking, nextFallbackMessage = '') {
     addBooking(booking)
     setConfirmedBooking(booking)
     setErrorMessage('')
+    setFallbackMessage(nextFallbackMessage)
     setPendingSameDayBooking(null)
     setSelectedDuration(defaultBookingDuration)
     setForm((currentForm) => ({
@@ -327,25 +444,69 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     }))
   }
 
+  async function submitBooking(booking: Booking) {
+    if (isSubmittingBookingRef.current) {
+      return
+    }
+
+    isSubmittingBookingRef.current = true
+    setIsSubmittingBooking(true)
+    setErrorMessage('')
+    setFallbackMessage('')
+
+    try {
+      const apiResult = await createBookingWithApi(booking)
+      const bookingToSave =
+        apiResult.bookingId !== null
+          ? {
+              ...booking,
+              id: apiResult.bookingId,
+            }
+          : booking
+
+      saveBooking(
+        bookingToSave,
+        apiResult.usedFallback
+          ? 'Saved locally because the backend is unavailable.'
+          : '',
+      )
+    } catch (error) {
+      setConfirmedBooking(null)
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Booking could not be created.',
+      )
+    } finally {
+      isSubmittingBookingRef.current = false
+      setIsSubmittingBooking(false)
+    }
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    if (isSubmittingBookingRef.current) {
+      return
+    }
 
     const requiredFieldError = getRequiredFieldError()
 
     if (requiredFieldError) {
       setErrorMessage(requiredFieldError)
+      setFallbackMessage('')
       setConfirmedBooking(null)
       return
     }
 
     if (fieldValidationErrors.length > 0) {
       setErrorMessage(fieldValidationErrors.join('\n'))
+      setFallbackMessage('')
       setConfirmedBooking(null)
       return
     }
 
     if (!selectedResource) {
       setErrorMessage('Choose a valid resource.')
+      setFallbackMessage('')
       setConfirmedBooking(null)
       return
     }
@@ -384,6 +545,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     if (validationError) {
       setErrorMessage(validationError)
+      setFallbackMessage('')
       setConfirmedBooking(null)
       return
     }
@@ -392,17 +554,20 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
       setPendingSameDayBooking(newBooking)
       setConfirmedBooking(null)
       setErrorMessage('')
+      setFallbackMessage('')
       return
     }
 
-    saveBooking(newBooking)
+    void submitBooking(newBooking)
   }
 
   return (
     <section className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
       {pendingSameDayBooking && (
         <SameDayBookingModal
-          onConfirm={() => saveBooking(pendingSameDayBooking)}
+          onConfirm={() => {
+            void submitBooking(pendingSameDayBooking)
+          }}
           onEditDetails={() => setPendingSameDayBooking(null)}
         />
       )}
@@ -563,11 +728,18 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
           </p>
         )}
 
+        {fallbackMessage && (
+          <p className="rounded-lg border border-amber-100 border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:border-l-amber-500 dark:bg-amber-950 dark:text-amber-300">
+            {fallbackMessage}
+          </p>
+        )}
+
         <button
           type="submit"
-          className="min-h-11 w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 md:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
+          disabled={isSubmittingBooking}
+          className="min-h-11 w-full rounded-lg bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:hover:bg-slate-400 md:w-auto dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900 dark:disabled:bg-slate-700 dark:disabled:hover:bg-slate-700"
         >
-          Submit booking
+          {isSubmittingBooking ? 'Submitting...' : 'Submit booking'}
         </button>
       </form>
 
