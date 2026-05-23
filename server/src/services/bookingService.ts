@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { BookingStatus, PrismaClient } from '@prisma/client'
 
 import { AppError } from '../middleware/errorHandler'
 import {
@@ -9,7 +9,10 @@ import {
 } from '../utils/bookingValidation'
 
 const prisma = new PrismaClient()
-const activeBookingStatuses = ['pending', 'approved'] as const
+const activeBookingStatuses: BookingStatus[] = [
+  BookingStatus.pending,
+  BookingStatus.approved,
+]
 
 export async function getAllBookings() {
   return prisma.booking.findMany({
