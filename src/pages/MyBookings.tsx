@@ -27,6 +27,7 @@ import { getTodayDate } from '../utils/dateUtils'
 import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
 import { formatStudentIdForDisplay } from '../utils/studentIdUtils'
 import type { ResourceSelectLabels } from '../components/ResourceSelect'
+import type { BookingStatus } from '../types'
 
 type BookingFilter = 'Active' | 'Upcoming' | 'Cancelled' | 'Completed'
 
@@ -37,8 +38,124 @@ type EditFormValues = {
   endTime: string
 }
 
+type ApiBooking = {
+  id: unknown
+  resourceId: unknown
+  studentName: unknown
+  studentId: unknown
+  date: unknown
+  startTime: unknown
+  endTime: unknown
+  status: unknown
+  createdAt: unknown
+  editsRemaining?: unknown
+}
+
 const filters: BookingFilter[] = ['Active', 'Upcoming', 'Cancelled', 'Completed']
 const maxRemainingEdits = 2
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
+
+function getApiUrl(path: string) {
+  return `${apiBaseUrl.replace(/\/$/, '')}${path}`
+}
+
+function isApiBooking(value: unknown): value is ApiBooking {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'id' in value &&
+    'resourceId' in value &&
+    'studentName' in value &&
+    'studentId' in value &&
+    'date' in value &&
+    'startTime' in value &&
+    'endTime' in value &&
+    'status' in value &&
+    'createdAt' in value
+  )
+}
+
+function mapApiStatus(status: unknown): BookingStatus | null {
+  if (status === 'pending' || status === 'approved' || status === 'cancelled') {
+    return status
+  }
+
+  if (status === 'completed') {
+    return 'approved'
+  }
+
+  return null
+}
+
+function mapApiBooking(booking: unknown): Booking | null {
+  if (!isApiBooking(booking)) {
+    return null
+  }
+
+  const status = mapApiStatus(booking.status)
+
+  if (
+    typeof booking.id !== 'string' ||
+    !booking.id.trim() ||
+    typeof booking.resourceId !== 'string' ||
+    typeof booking.studentName !== 'string' ||
+    typeof booking.studentId !== 'string' ||
+    typeof booking.date !== 'string' ||
+    typeof booking.startTime !== 'string' ||
+    typeof booking.endTime !== 'string' ||
+    typeof booking.createdAt !== 'string' ||
+    status === null
+  ) {
+    return null
+  }
+
+  return {
+    id: booking.id,
+    resourceId: booking.resourceId,
+    studentName: booking.studentName,
+    studentId: booking.studentId,
+    date: booking.date,
+    startTime: booking.startTime,
+    endTime: booking.endTime,
+    purpose: '',
+    status,
+    createdAt: booking.createdAt,
+    remainingEdits:
+      typeof booking.editsRemaining === 'number'
+        ? booking.editsRemaining
+        : undefined,
+  }
+}
+
+function mapApiBookings(responseBody: unknown): Booking[] {
+  if (
+    typeof responseBody !== 'object' ||
+    responseBody === null ||
+    !('data' in responseBody) ||
+    !Array.isArray(responseBody.data)
+  ) {
+    throw new Error('Bookings response was not usable.')
+  }
+
+  return responseBody.data
+    .map(mapApiBooking)
+    .filter((booking): booking is Booking => booking !== null)
+}
+
+function mergeBackendAndLocalBookings(
+  backendBookings: Booking[],
+  localBookings: Booking[],
+) {
+  const backendBookingIds = new Set(
+    backendBookings.map((booking) => booking.id),
+  )
+  const localOnlyBookings = localBookings.filter(
+    (booking) => !backendBookingIds.has(booking.id),
+  )
+
+  return [...backendBookings, ...localOnlyBookings]
+}
 
 function getBookingEndDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.endTime}:00`)
@@ -121,6 +238,9 @@ function getRemainingEdits(booking: Booking) {
 
 export function MyBookings() {
   const [bookings, setBookings] = useState<Booking[]>(() => getBookings())
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true)
+  const [isUsingLocalBookingsFallback, setIsUsingLocalBookingsFallback] =
+    useState(false)
   const [selectedFilter, setSelectedFilter] = useState<BookingFilter>('Active')
   const [editingBookingId, setEditingBookingId] = useState('')
   const [editForm, setEditForm] = useState<EditFormValues>({
@@ -138,6 +258,44 @@ export function MyBookings() {
   const [pendingFinalEdit, setPendingFinalEdit] = useState<Booking | null>(null)
   const [todayDate, setTodayDate] = useState(getTodayDate)
   const [toastMessage, setToastMessage] = useState('')
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadBookings() {
+      try {
+        const response = await fetch(getApiUrl('/api/bookings'))
+
+        if (!response.ok) {
+          throw new Error('Bookings request failed.')
+        }
+
+        const responseBody: unknown = await response.json()
+        const backendBookings = mapApiBookings(responseBody)
+        const localBookings = getBookings()
+
+        if (isMounted) {
+          setBookings(mergeBackendAndLocalBookings(backendBookings, localBookings))
+          setIsUsingLocalBookingsFallback(false)
+        }
+      } catch {
+        if (isMounted) {
+          setBookings(getBookings())
+          setIsUsingLocalBookingsFallback(true)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingBookings(false)
+        }
+      }
+    }
+
+    loadBookings()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -176,6 +334,10 @@ export function MyBookings() {
 
   const filteredBookings = bookings.filter(
     (booking) => getBookingGroup(booking, todayDate) === selectedFilter,
+  )
+  const localBookingIds = useMemo(
+    () => new Set(getBookings().map((booking) => booking.id)),
+    [bookings],
   )
 
   const selectedResource = resources.find(
@@ -493,6 +655,18 @@ export function MyBookings() {
         </p>
       )}
 
+      {isLoadingBookings && (
+        <p className="rounded-lg border border-blue-100 border-l-4 border-l-blue-500 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 transition-colors duration-300 ease-in-out dark:border-blue-900 dark:border-l-blue-500 dark:bg-blue-950 dark:text-blue-300">
+          Loading bookings...
+        </p>
+      )}
+
+      {!isLoadingBookings && isUsingLocalBookingsFallback && (
+        <p className="rounded-lg border border-amber-100 border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 transition-colors duration-300 ease-in-out dark:border-amber-900 dark:border-l-amber-500 dark:bg-amber-950 dark:text-amber-300">
+          Using local bookings because the backend is unavailable.
+        </p>
+      )}
+
       {bookings.length === 0 ? (
         <EmptyState
           title="No bookings yet"
@@ -512,6 +686,7 @@ export function MyBookings() {
             const isEditing = editingBookingId === booking.id
             const isUpcomingBooking = bookingGroup === 'Upcoming'
             const remainingEdits = getRemainingEdits(booking)
+            const hasLocalBooking = localBookingIds.has(booking.id)
 
             return (
               <div key={booking.id} className="space-y-3">
@@ -520,9 +695,12 @@ export function MyBookings() {
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
                   displayStatus={getDisplayStatus(booking)}
-                  canEdit={isUpcomingBooking && remainingEdits > 0}
+                  canEdit={
+                    hasLocalBooking && isUpcomingBooking && remainingEdits > 0
+                  }
                   canCancel={
-                    bookingGroup === 'Active' || bookingGroup === 'Upcoming'
+                    hasLocalBooking &&
+                    (bookingGroup === 'Active' || bookingGroup === 'Upcoming')
                   }
                   remainingEdits={
                     isUpcomingBooking ? remainingEdits : undefined
