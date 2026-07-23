@@ -10,12 +10,12 @@ import {
 
 const prisma = new PrismaClient()
 const activeBookingStatuses: BookingStatus[] = [
-  BookingStatus.pending,
-  BookingStatus.approved,
+  BookingStatus.upcoming,
+  BookingStatus.active,
 ]
 
 export async function getAllBookings() {
-  return prisma.booking.findMany({
+  const bookings = await prisma.booking.findMany({
     include: {
       resource: true,
     },
@@ -28,6 +28,8 @@ export async function getAllBookings() {
       },
     ],
   })
+
+  return Promise.all(bookings.map(normalizeBookingStatus))
 }
 
 export async function createBookingWithValidation(input: unknown) {
@@ -40,8 +42,8 @@ export async function createBookingWithValidation(input: unknown) {
   return prisma.booking.create({
     data: {
       ...payload,
-      status: 'pending',
-      editsRemaining: 2,
+      status: getComputedBookingStatus(payload),
+      editsRemaining: isTodayDate(payload.date) ? 0 : 2,
     },
   })
 }
@@ -60,6 +62,8 @@ export async function updateBookingWithValidation(
     throw new AppError(404, 'Booking not found')
   }
 
+  validateBookingCanBeEdited(existingBooking)
+
   const payload = getValidatedBookingPayload({
     studentName: getInputValue(input, 'studentName') ?? existingBooking.studentName,
     studentId: getInputValue(input, 'studentId') ?? existingBooking.studentId,
@@ -71,6 +75,10 @@ export async function updateBookingWithValidation(
   })
   const resource = await getResourceOrThrow(payload.resourceId)
 
+  if (isTodayDate(payload.date)) {
+    throw new AppError(400, 'Same-day bookings cannot be edited after submission.')
+  }
+
   validateResourceRules(payload, resource)
   await ensureNoBookingConflict(payload, bookingId)
 
@@ -78,7 +86,11 @@ export async function updateBookingWithValidation(
     where: {
       id: bookingId,
     },
-    data: payload,
+    data: {
+      ...payload,
+      status: getComputedBookingStatus(payload),
+      editsRemaining: existingBooking.editsRemaining - 1,
+    },
   })
 }
 
@@ -138,6 +150,98 @@ function validateResourceRules(
   }
 }
 
+function validateBookingCanBeEdited(booking: {
+  date: string
+  endTime: string
+  status: BookingStatus
+  editsRemaining: number
+}) {
+  const currentStatus = getNormalizedBookingStatus(booking)
+
+  if (currentStatus === BookingStatus.cancelled) {
+    throw new AppError(400, 'Cancelled bookings cannot be edited.')
+  }
+
+  if (currentStatus === BookingStatus.completed) {
+    throw new AppError(400, 'Completed bookings cannot be edited.')
+  }
+
+  if (currentStatus === BookingStatus.active || isTodayDate(booking.date)) {
+    throw new AppError(400, 'Same-day bookings cannot be edited after submission.')
+  }
+
+  if (booking.editsRemaining <= 0) {
+    throw new AppError(400, 'No edits left for this booking.')
+  }
+}
+
+async function normalizeBookingStatus<
+  T extends {
+    id: string
+    date: string
+    startTime: string
+    endTime: string
+    status: BookingStatus
+  },
+>(booking: T) {
+  const nextStatus = getNormalizedBookingStatus(booking)
+
+  if (nextStatus === booking.status) {
+    return booking
+  }
+
+  await prisma.booking.update({
+    where: {
+      id: booking.id,
+    },
+    data: {
+      status: nextStatus,
+    },
+  })
+
+  return {
+    ...booking,
+    status: nextStatus,
+  }
+}
+
+function getNormalizedBookingStatus(booking: {
+  date: string
+  startTime?: string
+  endTime: string
+  status: BookingStatus
+}) {
+  if (booking.status === BookingStatus.cancelled) {
+    return BookingStatus.cancelled
+  }
+
+  return getComputedBookingStatus({
+    date: booking.date,
+    startTime: booking.startTime ?? booking.endTime,
+    endTime: booking.endTime,
+  })
+}
+
+function getComputedBookingStatus(booking: {
+  date: string
+  startTime: string
+  endTime: string
+}) {
+  const now = new Date()
+  const startDate = getBookingDateTime(booking.date, booking.startTime)
+  const endDate = getBookingDateTime(booking.date, booking.endTime)
+
+  if (now < startDate) {
+    return BookingStatus.upcoming
+  }
+
+  if (now >= endDate) {
+    return BookingStatus.completed
+  }
+
+  return BookingStatus.active
+}
+
 async function ensureNoBookingConflict(
   payload: BookingPayload,
   bookingIdToIgnore?: string,
@@ -180,4 +284,21 @@ function getInputValue(input: unknown, key: string) {
   }
 
   return (input as Record<string, unknown>)[key]
+}
+
+function isTodayDate(date: string) {
+  return date === getTodayDate()
+}
+
+function getTodayDate() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function getBookingDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00`)
 }
