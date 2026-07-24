@@ -4,7 +4,12 @@ import { StatCard } from '../components/StatCard'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
 import { getActivityItems, type ActivityItem } from '../utils/activityStorage'
-import { getTodayDate } from '../utils/dateUtils'
+import {
+  CAMPUS_TIME_ZONE,
+  getCampusBookingLifecycle,
+  getCampusDateTimeTimestamp,
+  getTodayDate,
+} from '../utils/dateUtils'
 import { getBookings } from '../utils/storage'
 
 const dashboardSubtitles = [
@@ -16,7 +21,6 @@ const dashboardSubtitles = [
   'Keep campus schedules simple and conflict-free.',
 ]
 
-const maxRemainingEdits = 2
 const itemsPerActivityPage = 5
 
 type DashboardActivity = Omit<ActivityItem, 'action'> & {
@@ -50,14 +54,6 @@ const activityStyles = {
   },
 }
 
-function getBookingStartDate(booking: Booking) {
-  return new Date(`${booking.date}T${booking.startTime}:00`)
-}
-
-function getBookingEndDate(booking: Booking) {
-  return new Date(`${booking.date}T${booking.endTime}:00`)
-}
-
 function getResourceName(resourceId: string) {
   return (
     resources.find((resource) => resource.id === resourceId)?.name ??
@@ -65,33 +61,32 @@ function getResourceName(resourceId: string) {
   )
 }
 
-function getRemainingEdits(booking: Booking) {
-  return booking.remainingEdits ?? maxRemainingEdits
-}
-
 function isCompletedBooking(booking: Booking, now: Date) {
-  return getBookingEndDate(booking) < now
-}
-
-function isEditableFutureBooking(booking: Booking, todayDate: string, now: Date) {
   return (
     booking.status !== 'cancelled' &&
-    !isCompletedBooking(booking, now) &&
-    booking.date > todayDate &&
-    getRemainingEdits(booking) > 0
+    getCampusBookingLifecycle(booking, now) === 'completed'
   )
 }
 
-function isActiveDashboardBooking(
-  booking: Booking,
-  todayDate: string,
-  now: Date,
-) {
+function isUpcomingBooking(booking: Booking, now: Date) {
   return (
     booking.status !== 'cancelled' &&
-    !isCompletedBooking(booking, now) &&
-    !isEditableFutureBooking(booking, todayDate, now)
+    getCampusBookingLifecycle(booking, now) === 'upcoming'
   )
+}
+
+function isActiveDashboardBooking(booking: Booking, now: Date) {
+  return (
+    booking.status !== 'cancelled' &&
+    getCampusBookingLifecycle(booking, now) === 'active'
+  )
+}
+
+function compareBookingStarts(firstBooking: Booking, secondBooking: Booking) {
+  const dateComparison = firstBooking.date.localeCompare(secondBooking.date)
+
+  return dateComparison ||
+    firstBooking.startTime.localeCompare(secondBooking.startTime)
 }
 
 function formatActivityDate(date: string, todayDate: string) {
@@ -99,9 +94,10 @@ function formatActivityDate(date: string, todayDate: string) {
     return 'today'
   }
 
-  return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+  return new Date(getCampusDateTimeTimestamp(date, '00:00')).toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
+    timeZone: CAMPUS_TIME_ZONE,
   })
 }
 
@@ -153,16 +149,12 @@ export function Dashboard() {
   }, [])
 
   const activeBookings = bookings.filter((booking) =>
-    isActiveDashboardBooking(booking, todayDate, now),
+    isActiveDashboardBooking(booking, now),
   )
 
   const upcomingBookings = bookings
-    .filter((booking) => isEditableFutureBooking(booking, todayDate, now))
-    .sort(
-      (firstBooking, secondBooking) =>
-        getBookingStartDate(firstBooking).getTime() -
-        getBookingStartDate(secondBooking).getTime(),
-    )
+    .filter((booking) => isUpcomingBooking(booking, now))
+    .sort(compareBookingStarts)
 
   const cancelledBookings = bookings.filter(
     (booking) => booking.status === 'cancelled',
@@ -175,11 +167,7 @@ export function Dashboard() {
 
   const todayActiveBookings = activeBookings
     .filter((booking) => booking.date === todayDate)
-    .sort(
-      (firstBooking, secondBooking) =>
-        getBookingStartDate(firstBooking).getTime() -
-        getBookingStartDate(secondBooking).getTime(),
-    )
+    .sort(compareBookingStarts)
 
   const displayedTodayActiveBooking =
     todayActiveBookings.length > 0
@@ -194,7 +182,9 @@ export function Dashboard() {
       date: booking.date,
       startTime: booking.startTime,
       endTime: booking.endTime,
-      createdAt: getBookingEndDate(booking).toISOString(),
+      createdAt: new Date(
+        getCampusDateTimeTimestamp(booking.date, booking.endTime),
+      ).toISOString(),
     }),
   )
 

@@ -1,4 +1,5 @@
 import type { Booking, Resource } from '../types'
+import { getTodayDate } from './dateUtils'
 
 function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(':').map(Number)
@@ -15,12 +16,7 @@ export function isBlockingBookingStatus(status: Booking['status']) {
 }
 
 export function getPastDateError(date: string): string | null {
-  const bookingDate = new Date(`${date}T00:00:00`)
-  const today = new Date()
-
-  today.setHours(0, 0, 0, 0)
-
-  if (bookingDate < today) {
+  if (date < getTodayDate()) {
     return 'Choose today or a future date.'
   }
 

@@ -41,22 +41,6 @@ function getNumericPart(
   return numericValue
 }
 
-function getDateKeyFromParts({
-  year,
-  month,
-  day,
-}: Pick<CampusDateTimeParts, 'year' | 'month' | 'day'>) {
-  return [
-    String(year).padStart(4, '0'),
-    String(month).padStart(2, '0'),
-    String(day).padStart(2, '0'),
-  ].join('-')
-}
-
-export function formatDate(date: Date) {
-  return date.toLocaleDateString()
-}
-
 export function getCampusDateTimeParts(
   now: Date = new Date(),
 ): CampusDateTimeParts {
@@ -71,19 +55,14 @@ export function getCampusDateTimeParts(
   }
 }
 
-export function getTodayDate(now: Date = new Date()) {
-  return getDateKeyFromParts(getCampusDateTimeParts(now))
-}
-
-export function getTomorrowDate(now: Date = new Date()) {
+export function getCampusDateKey(now: Date = new Date()) {
   const { year, month, day } = getCampusDateTimeParts(now)
-  const tomorrow = new Date(Date.UTC(year, month - 1, day + 1))
 
-  return getDateKeyFromParts({
-    year: tomorrow.getUTCFullYear(),
-    month: tomorrow.getUTCMonth() + 1,
-    day: tomorrow.getUTCDate(),
-  })
+  return [
+    String(year).padStart(4, '0'),
+    String(month).padStart(2, '0'),
+    String(day).padStart(2, '0'),
+  ].join('-')
 }
 
 export function getCampusMinuteOfDay(now: Date = new Date()) {
@@ -102,7 +81,7 @@ export function getCampusBookingLifecycle(
   booking: CampusBookingTime,
   now: Date = new Date(),
 ): CampusBookingLifecycle {
-  const campusDate = getTodayDate(now)
+  const campusDate = getCampusDateKey(now)
 
   if (booking.date < campusDate) {
     return 'completed'
@@ -125,33 +104,4 @@ export function getCampusBookingLifecycle(
   }
 
   return 'active'
-}
-
-export function getCampusDateTimeTimestamp(date: string, time: string) {
-  const [year, month, day] = date.split('-').map(Number)
-  const [hour, minute] = time.split(':').map(Number)
-  const wallClockTimestamp = Date.UTC(year, month - 1, day, hour, minute)
-  let timestamp = wallClockTimestamp
-
-  // Resolve the campus wall-clock value to an instant without using the
-  // browser's local timezone. A second pass handles offset transitions.
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const campusParts = getCampusDateTimeParts(new Date(timestamp))
-    const representedTimestamp = Date.UTC(
-      campusParts.year,
-      campusParts.month - 1,
-      campusParts.day,
-      campusParts.hour,
-      campusParts.minute,
-    )
-    const correction = wallClockTimestamp - representedTimestamp
-
-    timestamp += correction
-
-    if (correction === 0) {
-      break
-    }
-  }
-
-  return timestamp
 }

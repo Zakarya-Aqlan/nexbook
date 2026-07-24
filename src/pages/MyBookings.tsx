@@ -22,7 +22,11 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
+import {
+  getCampusBookingLifecycle,
+  getTodayDate,
+  getTomorrowDate,
+} from '../utils/dateUtils'
 import {
   cancelBooking,
   getBookingSource,
@@ -252,14 +256,6 @@ async function requestBooking(
   return booking
 }
 
-function getBookingStartDate(booking: Booking) {
-  return new Date(`${booking.date}T${booking.startTime}:00`)
-}
-
-function getBookingEndDate(booking: Booking) {
-  return new Date(`${booking.date}T${booking.endTime}:00`)
-}
-
 function getBookingGroup(
   booking: Booking,
   currentTime = new Date(),
@@ -268,22 +264,17 @@ function getBookingGroup(
     return 'Cancelled'
   }
 
-  if (
-    booking.status === 'completed' ||
-    getBookingEndDate(booking).getTime() <= currentTime.getTime()
-  ) {
+  const lifecycle = getCampusBookingLifecycle(booking, currentTime)
+
+  if (lifecycle === 'completed') {
     return 'Completed'
   }
 
-  if (booking.status === 'active') {
+  if (lifecycle === 'active') {
     return 'Active'
   }
 
-  if (getBookingStartDate(booking).getTime() > currentTime.getTime()) {
-    return 'Upcoming'
-  }
-
-  return 'Active'
+  return 'Upcoming'
 }
 
 function getDisplayStatus(booking: Booking, currentTime: Date) {
