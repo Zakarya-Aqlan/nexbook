@@ -11,7 +11,13 @@ export type Resource = {
   description: string
 }
 
-export type BookingStatus = 'pending' | 'approved' | 'cancelled'
+export type BookingStatus =
+  | 'pending'
+  | 'approved'
+  | 'upcoming'
+  | 'active'
+  | 'cancelled'
+  | 'completed'
 
 export type Booking = {
   id: string

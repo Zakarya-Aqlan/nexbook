@@ -7,6 +7,7 @@ type BookingCardProps = {
   displayStatus: string
   canEdit: boolean
   canCancel: boolean
+  isCancelling?: boolean
   remainingEdits?: number
   onCancel: (bookingId: string) => void
   onEdit: (booking: Booking) => void
@@ -29,6 +30,7 @@ export function BookingCard({
   displayStatus,
   canEdit,
   canCancel,
+  isCancelling = false,
   remainingEdits,
   onCancel,
   onEdit,
@@ -90,9 +92,10 @@ export function BookingCard({
             <button
               type="button"
               onClick={() => onCancel(booking.id)}
-              className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-900"
+              disabled={isCancelling}
+              className="min-h-10 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-600 dark:focus:ring-red-900"
             >
-              Cancel booking
+              {isCancelling ? 'Cancelling...' : 'Cancel booking'}
             </button>
           )}
         </div>

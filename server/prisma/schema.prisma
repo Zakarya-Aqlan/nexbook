@@ -9,8 +9,8 @@ datasource db {
 }
 
 enum BookingStatus {
-  pending
-  approved
+  upcoming
+  active
   cancelled
   completed
 }
@@ -38,7 +38,7 @@ model Booking {
   startTime      String
   endTime        String
   duration       Int
-  status         BookingStatus @default(pending)
+  status         BookingStatus @default(upcoming)
   editsRemaining Int           @default(2)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

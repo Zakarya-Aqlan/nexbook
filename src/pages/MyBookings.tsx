@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BookingCard } from '../components/BookingCard'
 import { EmptyState } from '../components/EmptyState'
 import { AvailabilitySlots } from '../components/AvailabilitySlots'
 import { DatePicker } from '../components/DatePicker'
 import { ResourceSelect } from '../components/ResourceSelect'
-import { SameDayBookingModal } from '../components/SameDayBookingModal'
 import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
 import type { Booking } from '../types'
@@ -23,8 +22,16 @@ import {
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
-import { getTodayDate } from '../utils/dateUtils'
-import { cancelBooking, getBookings, updateBooking } from '../utils/storage'
+import { getTodayDate, getTomorrowDate } from '../utils/dateUtils'
+import {
+  cancelBooking,
+  getBookingSource,
+  getBookings,
+  markBookingSource,
+  markBookingSources,
+  mirrorCancelledBooking,
+  updateBooking,
+} from '../utils/storage'
 import { formatStudentIdForDisplay } from '../utils/studentIdUtils'
 import type { ResourceSelectLabels } from '../components/ResourceSelect'
 import type { BookingStatus } from '../types'
@@ -49,6 +56,23 @@ type ApiBooking = {
   status: unknown
   createdAt: unknown
   editsRemaining?: unknown
+}
+
+type ApiErrorBody = {
+  error?: {
+    message?: unknown
+    details?: unknown
+  }
+}
+
+type UpdateBookingPayload = {
+  studentName: string
+  studentId: string
+  resourceId: string
+  date: string
+  startTime: string
+  endTime: string
+  duration: number
 }
 
 const filters: BookingFilter[] = ['Active', 'Upcoming', 'Cancelled', 'Completed']
@@ -77,12 +101,15 @@ function isApiBooking(value: unknown): value is ApiBooking {
 }
 
 function mapApiStatus(status: unknown): BookingStatus | null {
-  if (status === 'pending' || status === 'approved' || status === 'cancelled') {
+  if (
+    status === 'pending' ||
+    status === 'approved' ||
+    status === 'upcoming' ||
+    status === 'active' ||
+    status === 'cancelled' ||
+    status === 'completed'
+  ) {
     return status
-  }
-
-  if (status === 'completed') {
-    return 'approved'
   }
 
   return null
@@ -157,28 +184,110 @@ function mergeBackendAndLocalBookings(
   return [...backendBookings, ...localOnlyBookings]
 }
 
+function replaceBooking(bookings: Booking[], updatedBooking: Booking) {
+  const hasBooking = bookings.some(
+    (booking) => booking.id === updatedBooking.id,
+  )
+
+  if (!hasBooking) {
+    return [...bookings, updatedBooking]
+  }
+
+  return bookings.map((booking) =>
+    booking.id === updatedBooking.id ? updatedBooking : booking,
+  )
+}
+
+function getApiErrorMessage(errorBody: unknown, fallbackMessage: string) {
+  if (!errorBody || typeof errorBody !== 'object') {
+    return fallbackMessage
+  }
+
+  const { error } = errorBody as ApiErrorBody
+  const message =
+    error && typeof error.message === 'string' ? error.message : ''
+  const details = Array.isArray(error?.details)
+    ? error.details.filter(
+        (detail): detail is string => typeof detail === 'string',
+      )
+    : []
+
+  return [message, ...details].filter(Boolean).join('\n') || fallbackMessage
+}
+
+async function requestBooking(
+  path: string,
+  request: RequestInit,
+  unavailableMessage: string,
+  fallbackMessage: string,
+) {
+  let response: Response
+
+  try {
+    response = await fetch(getApiUrl(path), request)
+  } catch {
+    throw new Error(unavailableMessage)
+  }
+
+  const responseBody: unknown = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(responseBody, fallbackMessage))
+  }
+
+  if (
+    !responseBody ||
+    typeof responseBody !== 'object' ||
+    !('data' in responseBody)
+  ) {
+    throw new Error('The backend returned an unusable booking response.')
+  }
+
+  const booking = mapApiBooking(responseBody.data)
+
+  if (!booking) {
+    throw new Error('The backend returned an unusable booking response.')
+  }
+
+  return booking
+}
+
+function getBookingStartDate(booking: Booking) {
+  return new Date(`${booking.date}T${booking.startTime}:00`)
+}
+
 function getBookingEndDate(booking: Booking) {
   return new Date(`${booking.date}T${booking.endTime}:00`)
 }
 
-function getBookingGroup(booking: Booking, todayDate = getTodayDate()): BookingFilter {
+function getBookingGroup(
+  booking: Booking,
+  currentTime = new Date(),
+): BookingFilter {
   if (booking.status === 'cancelled') {
     return 'Cancelled'
   }
 
-  if (getBookingEndDate(booking) < new Date()) {
+  if (
+    booking.status === 'completed' ||
+    getBookingEndDate(booking).getTime() <= currentTime.getTime()
+  ) {
     return 'Completed'
   }
 
-  if (booking.date > todayDate) {
+  if (booking.status === 'active') {
+    return 'Active'
+  }
+
+  if (getBookingStartDate(booking).getTime() > currentTime.getTime()) {
     return 'Upcoming'
   }
 
   return 'Active'
 }
 
-function getDisplayStatus(booking: Booking) {
-  return getBookingGroup(booking)
+function getDisplayStatus(booking: Booking, currentTime: Date) {
+  return getBookingGroup(booking, currentTime)
 }
 
 function getResourceName(resourceId: string) {
@@ -252,12 +361,18 @@ export function MyBookings() {
   const [editDuration, setEditDuration] = useState(60)
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
-  const [pendingSameDayEdit, setPendingSameDayEdit] = useState<Booking | null>(
-    null,
-  )
+  const [actionErrorMessage, setActionErrorMessage] = useState('')
   const [pendingFinalEdit, setPendingFinalEdit] = useState<Booking | null>(null)
-  const [todayDate, setTodayDate] = useState(getTodayDate)
+  const [currentTimestamp, setCurrentTimestamp] = useState(Date.now)
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+  const [cancellingBookingIds, setCancellingBookingIds] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [toastMessage, setToastMessage] = useState('')
+  const isSubmittingEditRef = useRef(false)
+  const cancellingBookingIdsRef = useRef(new Set<string>())
+  const currentTime = new Date(currentTimestamp)
+  const todayDate = getTodayDate()
 
   useEffect(() => {
     let isMounted = true
@@ -275,6 +390,10 @@ export function MyBookings() {
         const localBookings = getBookings()
 
         if (isMounted) {
+          markBookingSources(
+            backendBookings.map((booking) => booking.id),
+            'backend',
+          )
           setBookings(mergeBackendAndLocalBookings(backendBookings, localBookings))
           setIsUsingLocalBookingsFallback(false)
         }
@@ -299,7 +418,7 @@ export function MyBookings() {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      setTodayDate(getTodayDate())
+      setCurrentTimestamp(Date.now())
     }, 60_000)
 
     return () => window.clearInterval(intervalId)
@@ -323,21 +442,17 @@ export function MyBookings() {
         (counts, filter) => ({
           ...counts,
           [filter]: bookings.filter(
-            (booking) => getBookingGroup(booking, todayDate) === filter,
+            (booking) => getBookingGroup(booking, currentTime) === filter,
           )
             .length,
         }),
         { Active: 0, Upcoming: 0, Cancelled: 0, Completed: 0 },
       ),
-    [bookings, todayDate],
+    [bookings, currentTimestamp],
   )
 
   const filteredBookings = bookings.filter(
-    (booking) => getBookingGroup(booking, todayDate) === selectedFilter,
-  )
-  const localBookingIds = useMemo(
-    () => new Set(getBookings().map((booking) => booking.id)),
-    [bookings],
+    (booking) => getBookingGroup(booking, currentTime) === selectedFilter,
   )
 
   const selectedResource = resources.find(
@@ -386,11 +501,7 @@ export function MyBookings() {
     editResourceAvailability.every(
       ({ minimumSlotCount }) => minimumSlotCount === 0,
     )
-  const editMinBookingDate = todayDate
-
-  function refreshBookings() {
-    setBookings(getBookings())
-  }
+  const editMinBookingDate = getTomorrowDate()
 
   function startEditing(booking: Booking) {
     const bookingDuration = timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime)
@@ -405,6 +516,7 @@ export function MyBookings() {
     setEditDuration([60, 120, 180].includes(bookingDuration) ? bookingDuration : 60)
     setMessage('')
     setErrorMessage('')
+    setActionErrorMessage('')
   }
 
   function stopEditing() {
@@ -417,7 +529,6 @@ export function MyBookings() {
     })
     setEditDuration(60)
     setErrorMessage('')
-    setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
   }
 
@@ -428,15 +539,90 @@ export function MyBookings() {
     }))
     setMessage('')
     setErrorMessage('')
+    setActionErrorMessage('')
   }
 
-  function handleCancelBooking(bookingId: string) {
-    cancelBooking(bookingId)
-    refreshBookings()
-    setEditingBookingId('')
+  function setCancellationPending(bookingId: string, isPending: boolean) {
+    const nextBookingIds = new Set(cancellingBookingIdsRef.current)
+
+    if (isPending) {
+      nextBookingIds.add(bookingId)
+    } else {
+      nextBookingIds.delete(bookingId)
+    }
+
+    cancellingBookingIdsRef.current = nextBookingIds
+    setCancellingBookingIds(nextBookingIds)
+  }
+
+  async function handleCancelBooking(bookingId: string) {
+    if (cancellingBookingIdsRef.current.has(bookingId)) {
+      return
+    }
+
+    const bookingToCancel = bookings.find(
+      (booking) => booking.id === bookingId,
+    )
+
+    if (!bookingToCancel) {
+      setActionErrorMessage('Booking not found.')
+      return
+    }
+
+    setMessage('')
+    setActionErrorMessage('')
+
+    let cancelledBooking: Booking | null
+
+    if (getBookingSource(bookingId) === 'local') {
+      cancelledBooking = cancelBooking(bookingId)
+    } else {
+      setCancellationPending(bookingId, true)
+
+      try {
+        const backendBooking = await requestBooking(
+          `/api/bookings/${encodeURIComponent(bookingId)}/cancel`,
+          { method: 'PATCH' },
+          'The backend is unavailable. This booking was not cancelled.',
+          'Booking could not be cancelled.',
+        )
+
+        if (
+          backendBooking.id !== bookingId ||
+          backendBooking.status !== 'cancelled'
+        ) {
+          throw new Error('The backend returned an invalid cancellation response.')
+        }
+
+        markBookingSource(backendBooking.id, 'backend')
+        cancelledBooking = mirrorCancelledBooking(backendBooking)
+      } catch (error) {
+        setActionErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Booking could not be cancelled.',
+        )
+        return
+      } finally {
+        setCancellationPending(bookingId, false)
+      }
+    }
+
+    if (!cancelledBooking) {
+      setActionErrorMessage('Booking could not be cancelled locally.')
+      return
+    }
+
+    setBookings((currentBookings) =>
+      replaceBooking(currentBookings, cancelledBooking),
+    )
+
+    if (editingBookingId === bookingId) {
+      stopEditing()
+    }
+
     setMessage('Booking cancelled.')
     setErrorMessage('')
-    setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
     setToastMessage('')
   }
@@ -461,24 +647,88 @@ export function MyBookings() {
     return null
   }
 
-  function saveUpdatedBooking(updatedBooking: Booking) {
+  async function saveUpdatedBooking(updatedBooking: Booking) {
+    if (isSubmittingEditRef.current) {
+      return
+    }
+
     const bookingToEdit = bookings.find(
       (booking) => booking.id === updatedBooking.id,
     )
-    const nextRemainingEdits = Math.max(
-      getRemainingEdits(bookingToEdit ?? updatedBooking) - 1,
-      0,
-    )
-    const bookingWithEditCount: Booking = {
-      ...updatedBooking,
-      remainingEdits: nextRemainingEdits,
+
+    if (!bookingToEdit) {
+      setErrorMessage('Booking not found.')
+      return
     }
 
-    updateBooking(bookingWithEditCount)
-    refreshBookings()
-    stopEditing()
-    setPendingSameDayEdit(null)
     setPendingFinalEdit(null)
+    setMessage('')
+    setErrorMessage('')
+    setActionErrorMessage('')
+
+    let bookingToSave: Booking
+
+    if (getBookingSource(updatedBooking.id) === 'local') {
+      bookingToSave = {
+        ...updatedBooking,
+        remainingEdits: Math.max(getRemainingEdits(bookingToEdit) - 1, 0),
+      }
+      updateBooking(bookingToSave)
+    } else {
+      const payload: UpdateBookingPayload = {
+        studentName: bookingToEdit.studentName,
+        studentId: bookingToEdit.studentId,
+        resourceId: updatedBooking.resourceId,
+        date: updatedBooking.date,
+        startTime: updatedBooking.startTime,
+        endTime: updatedBooking.endTime,
+        duration:
+          timeToMinutes(updatedBooking.endTime) -
+          timeToMinutes(updatedBooking.startTime),
+      }
+
+      isSubmittingEditRef.current = true
+      setIsSubmittingEdit(true)
+
+      try {
+        bookingToSave = await requestBooking(
+          `/api/bookings/${encodeURIComponent(updatedBooking.id)}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          },
+          'The backend is unavailable. This booking was not updated.',
+          'Booking could not be updated.',
+        )
+
+        if (bookingToSave.id !== updatedBooking.id) {
+          throw new Error('The backend returned an invalid booking response.')
+        }
+
+        markBookingSource(bookingToSave.id, 'backend')
+        updateBooking(bookingToSave)
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Booking could not be updated.',
+        )
+        return
+      } finally {
+        isSubmittingEditRef.current = false
+        setIsSubmittingEdit(false)
+      }
+    }
+
+    const nextRemainingEdits = getRemainingEdits(bookingToSave)
+
+    setBookings((currentBookings) =>
+      replaceBooking(currentBookings, bookingToSave),
+    )
+    stopEditing()
     setMessage('Booking updated.')
     setErrorMessage('')
     setToastMessage(
@@ -490,6 +740,10 @@ export function MyBookings() {
 
   function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    if (isSubmittingEditRef.current) {
+      return
+    }
 
     const bookingToEdit = bookings.find(
       (booking) => booking.id === editingBookingId,
@@ -539,6 +793,11 @@ export function MyBookings() {
       endTime: editForm.endTime,
     }
 
+    if (updatedBooking.date === todayDate) {
+      setErrorMessage('Same-day bookings cannot be edited after submission.')
+      return
+    }
+
     const otherBookings = bookings.filter(
       (booking) => booking.id !== updatedBooking.id,
     )
@@ -568,21 +827,12 @@ export function MyBookings() {
 
     if (getRemainingEdits(bookingToEdit) === 1) {
       setPendingFinalEdit(updatedBooking)
-      setPendingSameDayEdit(null)
       setMessage('')
       setErrorMessage('')
       return
     }
 
-    if (updatedBooking.date === todayDate) {
-      setPendingSameDayEdit(updatedBooking)
-      setPendingFinalEdit(null)
-      setMessage('')
-      setErrorMessage('')
-      return
-    }
-
-    saveUpdatedBooking(updatedBooking)
+    void saveUpdatedBooking(updatedBooking)
   }
 
   return (
@@ -593,16 +843,11 @@ export function MyBookings() {
         </div>
       )}
 
-      {pendingSameDayEdit && (
-        <SameDayBookingModal
-          onConfirm={() => saveUpdatedBooking(pendingSameDayEdit)}
-          onEditDetails={() => setPendingSameDayEdit(null)}
-        />
-      )}
-
       {pendingFinalEdit && (
         <FinalEditWarningModal
-          onConfirm={() => saveUpdatedBooking(pendingFinalEdit)}
+          onConfirm={() => {
+            void saveUpdatedBooking(pendingFinalEdit)
+          }}
           onKeepEditing={() => setPendingFinalEdit(null)}
         />
       )}
@@ -637,6 +882,7 @@ export function MyBookings() {
               setSelectedFilter(filter)
               stopEditing()
               setMessage('')
+              setActionErrorMessage('')
             }}
             className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 ${
               selectedFilter === filter
@@ -652,6 +898,12 @@ export function MyBookings() {
       {message && (
         <p className="rounded-lg border border-green-100 border-l-4 border-l-green-500 bg-green-50 px-4 py-3 text-sm font-medium text-green-700 transition-colors duration-300 ease-in-out dark:border-green-900 dark:border-l-green-500 dark:bg-green-950 dark:text-green-300">
           {message}
+        </p>
+      )}
+
+      {actionErrorMessage && (
+        <p className={'rounded-lg border border-red-100 border-l-4 border-l-red-500 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 transition-colors duration-300 ease-in-out dark:border-red-900 dark:border-l-red-500 dark:bg-red-950 dark:text-red-300'}>
+          {actionErrorMessage}
         </p>
       )}
 
@@ -682,11 +934,11 @@ export function MyBookings() {
       ) : (
         <section className="space-y-4">
           {filteredBookings.map((booking) => {
-            const bookingGroup = getBookingGroup(booking, todayDate)
+            const bookingGroup = getBookingGroup(booking, currentTime)
             const isEditing = editingBookingId === booking.id
             const isUpcomingBooking = bookingGroup === 'Upcoming'
             const remainingEdits = getRemainingEdits(booking)
-            const hasLocalBooking = localBookingIds.has(booking.id)
+            const isCancelling = cancellingBookingIds.has(booking.id)
 
             return (
               <div key={booking.id} className="space-y-3">
@@ -694,14 +946,16 @@ export function MyBookings() {
                   booking={booking}
                   resourceName={getResourceName(booking.resourceId)}
                   groupLabel={bookingGroup}
-                  displayStatus={getDisplayStatus(booking)}
+                  displayStatus={getDisplayStatus(booking, currentTime)}
                   canEdit={
-                    hasLocalBooking && isUpcomingBooking && remainingEdits > 0
+                    isUpcomingBooking &&
+                    booking.date > todayDate &&
+                    remainingEdits > 0
                   }
                   canCancel={
-                    hasLocalBooking &&
-                    (bookingGroup === 'Active' || bookingGroup === 'Upcoming')
+                    bookingGroup === 'Active' || bookingGroup === 'Upcoming'
                   }
+                  isCancelling={isCancelling}
                   remainingEdits={
                     isUpcomingBooking ? remainingEdits : undefined
                   }
@@ -796,9 +1050,10 @@ export function MyBookings() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="submit"
-                        className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
+                        disabled={isSubmittingEdit}
+                        className="min-h-10 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors duration-300 ease-in-out hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500 dark:focus:ring-blue-900"
                       >
-                        Save changes
+                        {isSubmittingEdit ? 'Saving changes...' : 'Save changes'}
                       </button>
                       <button
                         type="button"

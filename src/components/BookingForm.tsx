@@ -17,7 +17,11 @@ import {
   hasBookingConflict,
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
-import { addBooking, getBookings } from '../utils/storage'
+import {
+  addBooking,
+  getBookings,
+  markBookingSource,
+} from '../utils/storage'
 import {
   formatStudentIdForDisplay,
   formatStudentIdForStorage,
@@ -63,6 +67,8 @@ type CreateBookingPayload = {
 
 type CreateBookingApiResult = {
   bookingId: string | null
+  remainingEdits: number | null
+  status: Booking['status'] | null
   usedFallback: boolean
 }
 
@@ -161,6 +167,21 @@ function getApiUrl(path: string) {
   return `${apiBaseUrl.replace(/\/$/, '')}${path}`
 }
 
+function mapApiStatusToLocalStatus(status: unknown): Booking['status'] | null {
+  if (
+    status === 'pending' ||
+    status === 'approved' ||
+    status === 'upcoming' ||
+    status === 'active' ||
+    status === 'cancelled' ||
+    status === 'completed'
+  ) {
+    return status
+  }
+
+  return null
+}
+
 function getApiErrorMessage(errorBody: unknown) {
   if (!errorBody || typeof errorBody !== 'object') {
     return 'Booking could not be created.'
@@ -203,6 +224,8 @@ async function createBookingWithApi(
   } catch {
     return {
       bookingId: null,
+      remainingEdits: null,
+      status: null,
       usedFallback: true,
     }
   }
@@ -213,24 +236,40 @@ async function createBookingWithApi(
     throw new Error(getApiErrorMessage(responseBody))
   }
 
-  if (
-    responseBody &&
-    typeof responseBody === 'object' &&
-    'data' in responseBody &&
-    responseBody.data &&
-    typeof responseBody.data === 'object' &&
-    'id' in responseBody.data &&
-    typeof responseBody.data.id === 'string' &&
-    responseBody.data.id.trim()
-  ) {
+  if (responseBody && typeof responseBody === 'object' && 'data' in responseBody) {
+    const { data } = responseBody
+
+    if (!data || typeof data !== 'object') {
+      return {
+        bookingId: null,
+        remainingEdits: null,
+        status: null,
+        usedFallback: false,
+      }
+    }
+
+    const bookingId =
+      'id' in data && typeof data.id === 'string' && data.id.trim()
+        ? data.id
+        : null
+    const remainingEdits =
+      'editsRemaining' in data && typeof data.editsRemaining === 'number'
+        ? data.editsRemaining
+        : null
+    const status = 'status' in data ? mapApiStatusToLocalStatus(data.status) : null
+
     return {
-      bookingId: responseBody.data.id,
+      bookingId,
+      remainingEdits,
+      status,
       usedFallback: false,
     }
   }
 
   return {
     bookingId: null,
+    remainingEdits: null,
+    status: null,
     usedFallback: false,
   }
 }
@@ -456,14 +495,17 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
 
     try {
       const apiResult = await createBookingWithApi(booking)
-      const bookingToSave =
-        apiResult.bookingId !== null
-          ? {
-              ...booking,
-              id: apiResult.bookingId,
-            }
-          : booking
+      const bookingToSave: Booking = {
+        ...booking,
+        id: apiResult.bookingId ?? booking.id,
+        status: apiResult.status ?? booking.status,
+        remainingEdits: apiResult.remainingEdits ?? booking.remainingEdits,
+      }
 
+      markBookingSource(
+        bookingToSave.id,
+        apiResult.bookingId ? 'backend' : 'local',
+      )
       saveBooking(
         bookingToSave,
         apiResult.usedFallback
