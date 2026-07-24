@@ -17,7 +17,11 @@ import {
   hasBookingConflict,
 } from '../utils/bookingUtils'
 import { getTodayDate } from '../utils/dateUtils'
-import { addBooking, getBookings } from '../utils/storage'
+import {
+  addBooking,
+  getBookings,
+  markBookingSource,
+} from '../utils/storage'
 import {
   formatStudentIdForDisplay,
   formatStudentIdForStorage,
@@ -164,21 +168,15 @@ function getApiUrl(path: string) {
 }
 
 function mapApiStatusToLocalStatus(status: unknown): Booking['status'] | null {
-  if (status === 'cancelled') {
-    return 'cancelled'
-  }
-
   if (
     status === 'pending' ||
     status === 'approved' ||
     status === 'upcoming' ||
-    status === 'active'
+    status === 'active' ||
+    status === 'cancelled' ||
+    status === 'completed'
   ) {
-    return 'pending'
-  }
-
-  if (status === 'completed') {
-    return 'approved'
+    return status
   }
 
   return null
@@ -504,6 +502,10 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         remainingEdits: apiResult.remainingEdits ?? booking.remainingEdits,
       }
 
+      markBookingSource(
+        bookingToSave.id,
+        apiResult.bookingId ? 'backend' : 'local',
+      )
       saveBooking(
         bookingToSave,
         apiResult.usedFallback

@@ -1,4 +1,5 @@
 import type { Booking, Resource } from '../types'
+import { isBlockingBookingStatus } from './bookingUtils'
 import { getTodayDate } from './dateUtils'
 
 export const minimumBookingDuration = 60
@@ -61,7 +62,7 @@ function hasSlotConflict(
       booking.id === excludeBookingId ||
       booking.resourceId !== resourceId ||
       booking.date !== date ||
-      booking.status === 'cancelled'
+      !isBlockingBookingStatus(booking.status)
     ) {
       return false
     }

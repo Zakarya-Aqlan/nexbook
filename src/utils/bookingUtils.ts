@@ -5,6 +5,15 @@ function timeToMinutes(time: string) {
   return hours * 60 + minutes
 }
 
+export function isBlockingBookingStatus(status: Booking['status']) {
+  return (
+    status === 'pending' ||
+    status === 'approved' ||
+    status === 'upcoming' ||
+    status === 'active'
+  )
+}
+
 export function getPastDateError(date: string): string | null {
   const bookingDate = new Date(`${date}T00:00:00`)
   const today = new Date()
@@ -56,7 +65,7 @@ export function hasBookingConflict(
   const hasConflict = existingBookings.some((booking) => {
     const isSameResource = booking.resourceId === newBooking.resourceId
     const isSameDate = booking.date === newBooking.date
-    const isActive = booking.status === 'pending' || booking.status === 'approved'
+    const isActive = isBlockingBookingStatus(booking.status)
     const existingStart = timeToMinutes(booking.startTime)
     const existingEnd = timeToMinutes(booking.endTime)
     const overlaps = newStart < existingEnd && newEnd > existingStart
