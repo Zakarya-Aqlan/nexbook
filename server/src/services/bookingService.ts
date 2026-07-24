@@ -105,6 +105,12 @@ export async function cancelBooking(bookingId: string) {
     throw new AppError(404, 'Booking not found')
   }
 
+  const currentStatus = getNormalizedBookingStatus(existingBooking)
+
+  if (currentStatus === BookingStatus.completed) {
+    throw new AppError(400, 'Completed bookings cannot be cancelled.')
+  }
+
   return prisma.booking.update({
     where: {
       id: bookingId,
