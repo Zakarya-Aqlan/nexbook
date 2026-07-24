@@ -1,6 +1,6 @@
 import type { Booking, Resource } from '../types'
 import { isBlockingBookingStatus } from './bookingUtils'
-import { getTodayDate } from './dateUtils'
+import { getCampusMinuteOfDay, getTodayDate } from './dateUtils'
 
 export const minimumBookingDuration = 60
 
@@ -28,6 +28,7 @@ type ResourceAvailabilityOptions = {
   duration: number
   bookings: Booking[]
   excludeBookingId?: string
+  now?: Date
 }
 
 export function timeToMinutes(time: string) {
@@ -42,11 +43,11 @@ export function minutesToTime(minutes: number) {
 }
 
 export function getCurrentTimeMinutes(now = new Date()) {
-  return now.getHours() * 60 + now.getMinutes()
+  return getCampusMinuteOfDay(now)
 }
 
-export function isTodayDate(date: string) {
-  return date === getTodayDate()
+export function isTodayDate(date: string, now = new Date()) {
+  return date === getTodayDate(now)
 }
 
 function hasSlotConflict(
@@ -85,7 +86,7 @@ export function getAvailabilitySlots({
   const open = timeToMinutes(resource.openingTime)
   const close = timeToMinutes(resource.closingTime)
   const currentTime = getCurrentTimeMinutes(now)
-  const shouldCheckCurrentTime = date === getTodayDate()
+  const shouldCheckCurrentTime = date === getTodayDate(now)
   const slots: AvailabilitySlot[] = []
 
   for (let m = open; m + duration <= close; m += duration) {
@@ -121,6 +122,7 @@ export function hasAvailableSlotForResource({
   duration,
   bookings,
   excludeBookingId,
+  now,
 }: ResourceAvailabilityOptions) {
   return getAvailableSlotCount({
     resource,
@@ -128,6 +130,7 @@ export function hasAvailableSlotForResource({
     duration,
     bookings,
     excludeBookingId,
+    now,
   }) > 0
 }
 
@@ -137,6 +140,7 @@ export function getAvailableSlotCount({
   duration,
   bookings,
   excludeBookingId,
+  now,
 }: ResourceAvailabilityOptions) {
   return getAvailabilitySlots({
     resource,
@@ -144,6 +148,7 @@ export function getAvailableSlotCount({
     duration,
     bookings,
     excludeBookingId,
+    now,
   }).filter((slot) => !slot.unavailable).length
 }
 
@@ -157,17 +162,25 @@ export function hasAvailableSlotForResourceToday(
   duration = minimumBookingDuration,
   excludeBookingId?: string,
 ) {
+  const now = new Date()
+
   return hasAvailableSlotForResource({
     resource,
-    date: getTodayDate(),
+    date: getTodayDate(now),
     duration,
     bookings,
     excludeBookingId,
+    now,
   })
 }
 
 export function getPastSameDayTimeError(date: string, startTime: string) {
-  if (isTodayDate(date) && timeToMinutes(startTime) < getCurrentTimeMinutes()) {
+  const now = new Date()
+
+  if (
+    isTodayDate(date, now) &&
+    timeToMinutes(startTime) < getCurrentTimeMinutes(now)
+  ) {
     return 'Start time cannot be in the past.'
   }
 
@@ -180,14 +193,17 @@ export function getNoRemainingTodayError(
   bookings: Booking[],
   excludeBookingId?: string,
 ) {
+  const now = new Date()
+
   if (
-    isTodayDate(date) &&
+    isTodayDate(date, now) &&
     !hasAvailableSlotForResource({
       resource,
       date,
       duration: minimumBookingDuration,
       bookings,
       excludeBookingId,
+      now,
     })
   ) {
     return 'No time remains today for this resource. Choose another date or resource.'

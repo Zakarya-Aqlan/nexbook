@@ -7,6 +7,10 @@ import {
   validateBookingAgainstResource,
   validateBookingInput,
 } from '../utils/bookingValidation'
+import {
+  getCampusBookingLifecycle,
+  getCampusDateKey,
+} from '../utils/campusTime'
 
 const prisma = new PrismaClient()
 const activeBookingStatuses: BookingStatus[] = [
@@ -233,19 +237,7 @@ function getComputedBookingStatus(booking: {
   startTime: string
   endTime: string
 }) {
-  const now = new Date()
-  const startDate = getBookingDateTime(booking.date, booking.startTime)
-  const endDate = getBookingDateTime(booking.date, booking.endTime)
-
-  if (now < startDate) {
-    return BookingStatus.upcoming
-  }
-
-  if (now >= endDate) {
-    return BookingStatus.completed
-  }
-
-  return BookingStatus.active
+  return getCampusBookingLifecycle(booking)
 }
 
 async function ensureNoBookingConflict(
@@ -293,18 +285,5 @@ function getInputValue(input: unknown, key: string) {
 }
 
 function isTodayDate(date: string) {
-  return date === getTodayDate()
-}
-
-function getTodayDate() {
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = String(today.getMonth() + 1).padStart(2, '0')
-  const day = String(today.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function getBookingDateTime(date: string, time: string) {
-  return new Date(`${date}T${time}:00`)
+  return date === getCampusDateKey()
 }

@@ -1,3 +1,5 @@
+import { getCampusDateTimeParts } from './campusTime'
+
 export type BookingPayload = {
   studentName: string
   studentId: string
@@ -54,6 +56,12 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
   const duration = getRequiredNumber(data, 'duration', errors)
   const studentId = normalizeStudentId(rawStudentId)
   const bookingDate = date ? getDateParts(date) : null
+  const campusNow = getCampusDateTimeParts()
+  const campusToday = {
+    year: campusNow.year,
+    month: campusNow.month,
+    day: campusNow.day,
+  }
 
   if (studentName && !/^[A-Za-z ]+$/.test(studentName)) {
     errors.push('Student name can only contain letters and spaces.')
@@ -67,7 +75,7 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
     errors.push('Date must be a real calendar date in YYYY-MM-DD format.')
   }
 
-  if (bookingDate && compareDateParts(bookingDate, getTodayDateParts()) < 0) {
+  if (bookingDate && compareDateParts(bookingDate, campusToday) < 0) {
     errors.push('Choose today or a future date.')
   }
 
@@ -87,8 +95,8 @@ export function validateBookingInput(input: unknown): BookingValidationResult {
     bookingDate &&
     startTime &&
     isValidTime(startTime) &&
-    isToday(bookingDate) &&
-    timeToMinutes(startTime) < getCurrentTimeMinutes()
+    compareDateParts(bookingDate, campusToday) === 0 &&
+    timeToMinutes(startTime) < campusNow.hour * 60 + campusNow.minute
   ) {
     errors.push('Start time cannot be in the past.')
   }
@@ -226,16 +234,6 @@ function isLeapYear(year: number) {
   return year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0)
 }
 
-function getTodayDateParts(): DateParts {
-  const today = new Date()
-
-  return {
-    year: today.getFullYear(),
-    month: today.getMonth() + 1,
-    day: today.getDate(),
-  }
-}
-
 function compareDateParts(first: DateParts, second: DateParts) {
   if (first.year !== second.year) {
     return first.year - second.year
@@ -246,16 +244,6 @@ function compareDateParts(first: DateParts, second: DateParts) {
   }
 
   return first.day - second.day
-}
-
-function isToday(date: DateParts) {
-  return compareDateParts(date, getTodayDateParts()) === 0
-}
-
-function getCurrentTimeMinutes() {
-  const now = new Date()
-
-  return now.getHours() * 60 + now.getMinutes()
 }
 
 function timeToMinutes(time: string) {
