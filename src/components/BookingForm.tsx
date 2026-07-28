@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
-import type { Booking } from '../types'
+import { mapApiActivity } from '../services/activityApi'
+import { getApiUrl } from '../services/apiConfig'
+import type { Activity, Booking } from '../types'
+import { mirrorActivity } from '../utils/activityStorage'
 import {
   getAvailableSlotCount,
   getDurationHourLabel,
@@ -21,6 +24,7 @@ import {
   addBooking,
   getBookings,
   markBookingSource,
+  mirrorBooking,
 } from '../utils/storage'
 import {
   formatStudentIdForDisplay,
@@ -69,6 +73,7 @@ type CreateBookingApiResult = {
   bookingId: string | null
   remainingEdits: number | null
   status: Booking['status'] | null
+  activity: Activity | null
   usedFallback: boolean
 }
 
@@ -81,8 +86,6 @@ type ApiErrorBody = {
 
 const bookingDraftKey = 'nexbook-booking-draft'
 const defaultBookingDuration = 60
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 
 const emptyResourceAvailabilityDraft: ResourceAvailabilityDraft = {
   resourceId: '',
@@ -163,10 +166,6 @@ function getBookingDurationMinutes(booking: Booking) {
   return timeToMinutes(booking.endTime) - timeToMinutes(booking.startTime)
 }
 
-function getApiUrl(path: string) {
-  return `${apiBaseUrl.replace(/\/$/, '')}${path}`
-}
-
 function mapApiStatusToLocalStatus(status: unknown): Booking['status'] | null {
   if (
     status === 'pending' ||
@@ -226,6 +225,7 @@ async function createBookingWithApi(
       bookingId: null,
       remainingEdits: null,
       status: null,
+      activity: null,
       usedFallback: true,
     }
   }
@@ -240,38 +240,37 @@ async function createBookingWithApi(
     const { data } = responseBody
 
     if (!data || typeof data !== 'object') {
-      return {
-        bookingId: null,
-        remainingEdits: null,
-        status: null,
-        usedFallback: false,
-      }
+      throw new Error('The backend returned an unusable booking response.')
     }
 
     const bookingId =
       'id' in data && typeof data.id === 'string' && data.id.trim()
         ? data.id
         : null
+
+    if (!bookingId) {
+      throw new Error('The backend returned an unusable booking response.')
+    }
     const remainingEdits =
       'editsRemaining' in data && typeof data.editsRemaining === 'number'
         ? data.editsRemaining
         : null
     const status = 'status' in data ? mapApiStatusToLocalStatus(data.status) : null
+    const activity =
+      'activity' in responseBody
+        ? mapApiActivity(responseBody.activity)
+        : null
 
     return {
       bookingId,
       remainingEdits,
       status,
+      activity,
       usedFallback: false,
     }
   }
 
-  return {
-    bookingId: null,
-    remainingEdits: null,
-    status: null,
-    usedFallback: false,
-  }
+  throw new Error('The backend returned an unusable booking response.')
 }
 
 function getResourceAvailabilityLabel(
@@ -467,8 +466,7 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
     return null
   }
 
-  function saveBooking(booking: Booking, nextFallbackMessage = '') {
-    addBooking(booking)
+  function finishBooking(booking: Booking, nextFallbackMessage = '') {
     setConfirmedBooking(booking)
     setErrorMessage('')
     setFallbackMessage(nextFallbackMessage)
@@ -506,7 +504,18 @@ export function BookingForm({ initialResourceId }: BookingFormProps) {
         bookingToSave.id,
         apiResult.bookingId ? 'backend' : 'local',
       )
-      saveBooking(
+
+      if (apiResult.usedFallback) {
+        addBooking(bookingToSave)
+      } else {
+        mirrorBooking(bookingToSave)
+
+        if (apiResult.activity) {
+          mirrorActivity(apiResult.activity)
+        }
+      }
+
+      finishBooking(
         bookingToSave,
         apiResult.usedFallback
           ? 'Saved locally because the backend is unavailable.'

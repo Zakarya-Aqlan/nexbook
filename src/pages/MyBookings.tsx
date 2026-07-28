@@ -6,7 +6,14 @@ import { DatePicker } from '../components/DatePicker'
 import { ResourceSelect } from '../components/ResourceSelect'
 import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
+import { mapApiActivity } from '../services/activityApi'
+import { getApiUrl } from '../services/apiConfig'
+import {
+  loadBookings as loadBookingsFromApi,
+  mapApiBooking,
+} from '../services/bookingApi'
 import type { Booking } from '../types'
+import { mirrorActivity } from '../utils/activityStorage'
 import {
   getAvailableSlotCount,
   getDurationHourLabel,
@@ -19,11 +26,11 @@ import {
   getDurationError,
   getOpeningHoursError,
   getPastDateError,
+  getBookingGroup,
   getTimeRangeError,
   hasBookingConflict,
 } from '../utils/bookingUtils'
 import {
-  getCampusBookingLifecycle,
   getTodayDate,
   getTomorrowDate,
 } from '../utils/dateUtils'
@@ -32,13 +39,11 @@ import {
   getBookingSource,
   getBookings,
   markBookingSource,
-  markBookingSources,
-  mirrorCancelledBooking,
+  mirrorBooking,
   updateBooking,
 } from '../utils/storage'
 import { formatStudentIdForDisplay } from '../utils/studentIdUtils'
 import type { ResourceSelectLabels } from '../components/ResourceSelect'
-import type { BookingStatus } from '../types'
 
 type BookingFilter = 'Active' | 'Upcoming' | 'Cancelled' | 'Completed'
 
@@ -47,19 +52,6 @@ type EditFormValues = {
   date: string
   startTime: string
   endTime: string
-}
-
-type ApiBooking = {
-  id: unknown
-  resourceId: unknown
-  studentName: unknown
-  studentId: unknown
-  date: unknown
-  startTime: unknown
-  endTime: unknown
-  status: unknown
-  createdAt: unknown
-  editsRemaining?: unknown
 }
 
 type ApiErrorBody = {
@@ -81,112 +73,6 @@ type UpdateBookingPayload = {
 
 const filters: BookingFilter[] = ['Active', 'Upcoming', 'Cancelled', 'Completed']
 const maxRemainingEdits = 2
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-
-function getApiUrl(path: string) {
-  return `${apiBaseUrl.replace(/\/$/, '')}${path}`
-}
-
-function isApiBooking(value: unknown): value is ApiBooking {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'id' in value &&
-    'resourceId' in value &&
-    'studentName' in value &&
-    'studentId' in value &&
-    'date' in value &&
-    'startTime' in value &&
-    'endTime' in value &&
-    'status' in value &&
-    'createdAt' in value
-  )
-}
-
-function mapApiStatus(status: unknown): BookingStatus | null {
-  if (
-    status === 'pending' ||
-    status === 'approved' ||
-    status === 'upcoming' ||
-    status === 'active' ||
-    status === 'cancelled' ||
-    status === 'completed'
-  ) {
-    return status
-  }
-
-  return null
-}
-
-function mapApiBooking(booking: unknown): Booking | null {
-  if (!isApiBooking(booking)) {
-    return null
-  }
-
-  const status = mapApiStatus(booking.status)
-
-  if (
-    typeof booking.id !== 'string' ||
-    !booking.id.trim() ||
-    typeof booking.resourceId !== 'string' ||
-    typeof booking.studentName !== 'string' ||
-    typeof booking.studentId !== 'string' ||
-    typeof booking.date !== 'string' ||
-    typeof booking.startTime !== 'string' ||
-    typeof booking.endTime !== 'string' ||
-    typeof booking.createdAt !== 'string' ||
-    status === null
-  ) {
-    return null
-  }
-
-  return {
-    id: booking.id,
-    resourceId: booking.resourceId,
-    studentName: booking.studentName,
-    studentId: booking.studentId,
-    date: booking.date,
-    startTime: booking.startTime,
-    endTime: booking.endTime,
-    purpose: '',
-    status,
-    createdAt: booking.createdAt,
-    remainingEdits:
-      typeof booking.editsRemaining === 'number'
-        ? booking.editsRemaining
-        : undefined,
-  }
-}
-
-function mapApiBookings(responseBody: unknown): Booking[] {
-  if (
-    typeof responseBody !== 'object' ||
-    responseBody === null ||
-    !('data' in responseBody) ||
-    !Array.isArray(responseBody.data)
-  ) {
-    throw new Error('Bookings response was not usable.')
-  }
-
-  return responseBody.data
-    .map(mapApiBooking)
-    .filter((booking): booking is Booking => booking !== null)
-}
-
-function mergeBackendAndLocalBookings(
-  backendBookings: Booking[],
-  localBookings: Booking[],
-) {
-  const backendBookingIds = new Set(
-    backendBookings.map((booking) => booking.id),
-  )
-  const localOnlyBookings = localBookings.filter(
-    (booking) => !backendBookingIds.has(booking.id),
-  )
-
-  return [...backendBookings, ...localOnlyBookings]
-}
 
 function replaceBooking(bookings: Booking[], updatedBooking: Booking) {
   const hasBooking = bookings.some(
@@ -253,28 +139,12 @@ async function requestBooking(
     throw new Error('The backend returned an unusable booking response.')
   }
 
-  return booking
-}
+  const activity =
+    'activity' in responseBody
+      ? mapApiActivity(responseBody.activity)
+      : null
 
-function getBookingGroup(
-  booking: Booking,
-  currentTime = new Date(),
-): BookingFilter {
-  if (booking.status === 'cancelled') {
-    return 'Cancelled'
-  }
-
-  const lifecycle = getCampusBookingLifecycle(booking, currentTime)
-
-  if (lifecycle === 'completed') {
-    return 'Completed'
-  }
-
-  if (lifecycle === 'active') {
-    return 'Active'
-  }
-
-  return 'Upcoming'
+  return { booking, activity }
 }
 
 function getDisplayStatus(booking: Booking, currentTime: Date) {
@@ -369,34 +239,12 @@ export function MyBookings() {
     let isMounted = true
 
     async function loadBookings() {
-      try {
-        const response = await fetch(getApiUrl('/api/bookings'))
+      const result = await loadBookingsFromApi()
 
-        if (!response.ok) {
-          throw new Error('Bookings request failed.')
-        }
-
-        const responseBody: unknown = await response.json()
-        const backendBookings = mapApiBookings(responseBody)
-        const localBookings = getBookings()
-
-        if (isMounted) {
-          markBookingSources(
-            backendBookings.map((booking) => booking.id),
-            'backend',
-          )
-          setBookings(mergeBackendAndLocalBookings(backendBookings, localBookings))
-          setIsUsingLocalBookingsFallback(false)
-        }
-      } catch {
-        if (isMounted) {
-          setBookings(getBookings())
-          setIsUsingLocalBookingsFallback(true)
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingBookings(false)
-        }
+      if (isMounted) {
+        setBookings(result.bookings)
+        setIsUsingLocalBookingsFallback(result.isUsingFallback)
+        setIsLoadingBookings(false)
       }
     }
 
@@ -571,12 +419,13 @@ export function MyBookings() {
       setCancellationPending(bookingId, true)
 
       try {
-        const backendBooking = await requestBooking(
+        const result = await requestBooking(
           `/api/bookings/${encodeURIComponent(bookingId)}/cancel`,
           { method: 'PATCH' },
           'The backend is unavailable. This booking was not cancelled.',
           'Booking could not be cancelled.',
         )
+        const backendBooking = result.booking
 
         if (
           backendBooking.id !== bookingId ||
@@ -586,7 +435,11 @@ export function MyBookings() {
         }
 
         markBookingSource(backendBooking.id, 'backend')
-        cancelledBooking = mirrorCancelledBooking(backendBooking)
+        cancelledBooking = mirrorBooking(backendBooking)
+
+        if (result.activity) {
+          mirrorActivity(result.activity)
+        }
       } catch (error) {
         setActionErrorMessage(
           error instanceof Error
@@ -682,7 +535,7 @@ export function MyBookings() {
       setIsSubmittingEdit(true)
 
       try {
-        bookingToSave = await requestBooking(
+        const result = await requestBooking(
           `/api/bookings/${encodeURIComponent(updatedBooking.id)}`,
           {
             method: 'PUT',
@@ -694,13 +547,18 @@ export function MyBookings() {
           'The backend is unavailable. This booking was not updated.',
           'Booking could not be updated.',
         )
+        bookingToSave = result.booking
 
         if (bookingToSave.id !== updatedBooking.id) {
           throw new Error('The backend returned an invalid booking response.')
         }
 
         markBookingSource(bookingToSave.id, 'backend')
-        updateBooking(bookingToSave)
+        mirrorBooking(bookingToSave)
+
+        if (result.activity) {
+          mirrorActivity(result.activity)
+        }
       } catch (error) {
         setErrorMessage(
           error instanceof Error

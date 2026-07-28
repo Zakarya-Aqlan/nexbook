@@ -32,3 +32,22 @@ export type Booking = {
   createdAt: string
   remainingEdits?: number
 }
+
+export type ActivityType = 'booked' | 'updated' | 'cancelled' | 'completed'
+
+export type ActivitySource = 'backend' | 'local'
+
+export type Activity = {
+  id: string
+  type: ActivityType
+  bookingId: string
+  resourceId: string
+  resourceName: string
+  date: string
+  startTime: string
+  endTime: string
+  studentId?: string
+  createdAt: string
+  clientEventKey?: string
+  source: ActivitySource
+}
