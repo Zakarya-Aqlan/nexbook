@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import express from 'express'
 
 import { AppError, errorHandler } from './middleware/errorHandler'
+import { activityRoutes } from './routes/activityRoutes'
 import { bookingRoutes } from './routes/bookingRoutes'
 import { resourceRoutes } from './routes/resourceRoutes'
 
@@ -23,6 +24,7 @@ app.get('/api/health', (_request, response) => {
 
 app.use('/api/resources', resourceRoutes)
 app.use('/api/bookings', bookingRoutes)
+app.use('/api/activities', activityRoutes)
 
 app.use((_request, _response, next) => {
   next(new AppError(404, 'Route not found'))
