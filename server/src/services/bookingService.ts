@@ -1,6 +1,11 @@
-import { BookingStatus, PrismaClient } from '@prisma/client'
+import { ActivityType, BookingStatus, PrismaClient } from '@prisma/client'
 
 import { AppError } from '../middleware/errorHandler'
+import {
+  createBookingActivity,
+  getActivityByDedupeKey,
+  getActivityDedupeKey,
+} from './activityService'
 import {
   type BookingPayload,
   getTimeRangeMinutes,
@@ -9,6 +14,7 @@ import {
 } from '../utils/bookingValidation'
 import {
   getCampusBookingLifecycle,
+  getCampusDateTimeInstant,
   getCampusDateKey,
 } from '../utils/campusTime'
 
@@ -43,12 +49,22 @@ export async function createBookingWithValidation(input: unknown) {
   validateResourceRules(payload, resource)
   await ensureNoBookingConflict(payload)
 
-  return prisma.booking.create({
-    data: {
-      ...payload,
-      status: getComputedBookingStatus(payload),
-      editsRemaining: isTodayDate(payload.date) ? 0 : 2,
-    },
+  return prisma.$transaction(async (transaction) => {
+    const booking = await transaction.booking.create({
+      data: {
+        ...payload,
+        status: getComputedBookingStatus(payload),
+        editsRemaining: isTodayDate(payload.date) ? 0 : 2,
+      },
+    })
+    const activity = await createBookingActivity(
+      transaction,
+      ActivityType.booked,
+      booking,
+      resource.name,
+    )
+
+    return { booking, activity }
   })
 }
 
@@ -86,15 +102,25 @@ export async function updateBookingWithValidation(
   validateResourceRules(payload, resource)
   await ensureNoBookingConflict(payload, bookingId)
 
-  return prisma.booking.update({
-    where: {
-      id: bookingId,
-    },
-    data: {
-      ...payload,
-      status: getComputedBookingStatus(payload),
-      editsRemaining: existingBooking.editsRemaining - 1,
-    },
+  return prisma.$transaction(async (transaction) => {
+    const booking = await transaction.booking.update({
+      where: {
+        id: bookingId,
+      },
+      data: {
+        ...payload,
+        status: getComputedBookingStatus(payload),
+        editsRemaining: existingBooking.editsRemaining - 1,
+      },
+    })
+    const activity = await createBookingActivity(
+      transaction,
+      ActivityType.updated,
+      booking,
+      resource.name,
+    )
+
+    return { booking, activity }
   })
 }
 
@@ -102,6 +128,9 @@ export async function cancelBooking(bookingId: string) {
   const existingBooking = await prisma.booking.findUnique({
     where: {
       id: bookingId,
+    },
+    include: {
+      resource: true,
     },
   })
 
@@ -115,13 +144,31 @@ export async function cancelBooking(bookingId: string) {
     throw new AppError(400, 'Completed bookings cannot be cancelled.')
   }
 
-  return prisma.booking.update({
-    where: {
-      id: bookingId,
-    },
-    data: {
-      status: 'cancelled',
-    },
+  if (existingBooking.status === BookingStatus.cancelled) {
+    const activity = await getActivityByDedupeKey(
+      getActivityDedupeKey(ActivityType.cancelled, existingBooking),
+    )
+
+    return { booking: existingBooking, activity }
+  }
+
+  return prisma.$transaction(async (transaction) => {
+    const booking = await transaction.booking.update({
+      where: {
+        id: bookingId,
+      },
+      data: {
+        status: BookingStatus.cancelled,
+      },
+    })
+    const activity = await createBookingActivity(
+      transaction,
+      ActivityType.cancelled,
+      booking,
+      existingBooking.resource.name,
+    )
+
+    return { booking, activity }
   })
 }
 
@@ -188,26 +235,64 @@ function validateBookingCanBeEdited(booking: {
 async function normalizeBookingStatus<
   T extends {
     id: string
+    resourceId: string
+    studentId: string
     date: string
     startTime: string
     endTime: string
     status: BookingStatus
+    editsRemaining: number
+    resource: {
+      name: string
+    }
   },
 >(booking: T) {
   const nextStatus = getNormalizedBookingStatus(booking)
 
   if (nextStatus === booking.status) {
+    if (nextStatus === BookingStatus.completed) {
+      await prisma.$transaction((transaction) =>
+        createBookingActivity(
+          transaction,
+          ActivityType.completed,
+          booking,
+          booking.resource.name,
+          getCampusDateTimeInstant(booking.date, booking.endTime),
+        ),
+      )
+    }
+
     return booking
   }
 
-  await prisma.booking.update({
-    where: {
-      id: booking.id,
-    },
-    data: {
-      status: nextStatus,
-    },
-  })
+  if (nextStatus === BookingStatus.completed) {
+    await prisma.$transaction(async (transaction) => {
+      await transaction.booking.update({
+        where: {
+          id: booking.id,
+        },
+        data: {
+          status: nextStatus,
+        },
+      })
+      await createBookingActivity(
+        transaction,
+        ActivityType.completed,
+        booking,
+        booking.resource.name,
+        getCampusDateTimeInstant(booking.date, booking.endTime),
+      )
+    })
+  } else {
+    await prisma.booking.update({
+      where: {
+        id: booking.id,
+      },
+      data: {
+        status: nextStatus,
+      },
+    })
+  }
 
   return {
     ...booking,

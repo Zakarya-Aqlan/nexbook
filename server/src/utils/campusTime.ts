@@ -105,3 +105,31 @@ export function getCampusBookingLifecycle(
 
   return 'active'
 }
+
+export function getCampusDateTimeInstant(date: string, time: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  const [hour, minute] = time.split(':').map(Number)
+  const wallClockTimestamp = Date.UTC(year, month - 1, day, hour, minute)
+  let timestamp = wallClockTimestamp
+
+  // Resolve campus wall-clock parts to an instant without using server time.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const campusParts = getCampusDateTimeParts(new Date(timestamp))
+    const representedTimestamp = Date.UTC(
+      campusParts.year,
+      campusParts.month - 1,
+      campusParts.day,
+      campusParts.hour,
+      campusParts.minute,
+    )
+    const correction = wallClockTimestamp - representedTimestamp
+
+    timestamp += correction
+
+    if (correction === 0) {
+      break
+    }
+  }
+
+  return new Date(timestamp)
+}

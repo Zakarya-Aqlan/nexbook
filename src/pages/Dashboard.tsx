@@ -2,15 +2,20 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatCard } from '../components/StatCard'
 import { resources } from '../data/resources'
-import type { Booking } from '../types'
-import { getActivityItems, type ActivityItem } from '../utils/activityStorage'
+import { loadActivities } from '../services/activityApi'
+import { loadBookings } from '../services/bookingApi'
+import type { Activity, Booking } from '../types'
+import {
+  ensureLocalCompletedActivity,
+  getActivityItems,
+} from '../utils/activityStorage'
+import { getBookingGroup } from '../utils/bookingUtils'
 import {
   CAMPUS_TIME_ZONE,
-  getCampusBookingLifecycle,
   getCampusDateTimeTimestamp,
   getTodayDate,
 } from '../utils/dateUtils'
-import { getBookings } from '../utils/storage'
+import { getBookingSource, getBookings } from '../utils/storage'
 
 const dashboardSubtitles = [
   'Find available spaces in seconds.',
@@ -22,10 +27,6 @@ const dashboardSubtitles = [
 ]
 
 const itemsPerActivityPage = 5
-
-type DashboardActivity = Omit<ActivityItem, 'action'> & {
-  action: ActivityItem['action'] | 'completed'
-}
 
 const activityStyles = {
   booked: {
@@ -62,24 +63,15 @@ function getResourceName(resourceId: string) {
 }
 
 function isCompletedBooking(booking: Booking, now: Date) {
-  return (
-    booking.status !== 'cancelled' &&
-    getCampusBookingLifecycle(booking, now) === 'completed'
-  )
+  return getBookingGroup(booking, now) === 'Completed'
 }
 
 function isUpcomingBooking(booking: Booking, now: Date) {
-  return (
-    booking.status !== 'cancelled' &&
-    getCampusBookingLifecycle(booking, now) === 'upcoming'
-  )
+  return getBookingGroup(booking, now) === 'Upcoming'
 }
 
 function isActiveDashboardBooking(booking: Booking, now: Date) {
-  return (
-    booking.status !== 'cancelled' &&
-    getCampusBookingLifecycle(booking, now) === 'active'
-  )
+  return getBookingGroup(booking, now) === 'Active'
 }
 
 function compareBookingStarts(firstBooking: Booking, secondBooking: Booking) {
@@ -101,31 +93,29 @@ function formatActivityDate(date: string, todayDate: string) {
   })
 }
 
-function getActivityMessage(activity: DashboardActivity) {
-  const resourceName = getResourceName(activity.resourceId)
-
-  if (activity.action === 'booked') {
-    return `Booked ${resourceName}.`
+function getActivityMessage(activity: Activity) {
+  if (activity.type === 'booked') {
+    return `Booked ${activity.resourceName}.`
   }
 
-  if (activity.action === 'updated') {
-    return `Updated ${resourceName} booking.`
+  if (activity.type === 'updated') {
+    return `Updated ${activity.resourceName} booking.`
   }
 
-  if (activity.action === 'cancelled') {
-    return `Cancelled ${resourceName} booking.`
+  if (activity.type === 'cancelled') {
+    return `Cancelled ${activity.resourceName} booking.`
   }
 
-  return `Completed ${resourceName} booking.`
+  return `Completed ${activity.resourceName} booking.`
 }
 
-function getActivityTime(activity: DashboardActivity, todayDate: string) {
+function getActivityTime(activity: Activity, todayDate: string) {
   const dateLabel = formatActivityDate(activity.date, todayDate)
 
   return `${dateLabel} · ${activity.startTime} - ${activity.endTime}`
 }
 
-function getActivityTimestamp(activity: DashboardActivity) {
+function getActivityTimestamp(activity: Activity) {
   return new Date(activity.createdAt).getTime()
 }
 
@@ -133,10 +123,50 @@ export function Dashboard() {
   const [subtitleIndex, setSubtitleIndex] = useState(0)
   const [todayActiveIndex, setTodayActiveIndex] = useState(0)
   const [activityPage, setActivityPage] = useState(0)
-  const bookings = getBookings()
-  const activityItems = getActivityItems()
+  const [bookings, setBookings] = useState<Booking[]>(() => getBookings())
+  const [activityItems, setActivityItems] = useState<Activity[]>(() =>
+    getActivityItems(),
+  )
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true)
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true)
+  const [isUsingBookingFallback, setIsUsingBookingFallback] = useState(false)
+  const [isUsingActivityFallback, setIsUsingActivityFallback] = useState(false)
   const now = new Date()
   const todayDate = getTodayDate()
+  const isLoadingDashboard = isLoadingBookings || isLoadingActivities
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function refreshBookings() {
+      const result = await loadBookings()
+
+      result.bookings
+        .filter(
+          (booking) =>
+            getBookingSource(booking.id) === 'local' &&
+            getBookingGroup(booking) === 'Completed',
+        )
+        .forEach(ensureLocalCompletedActivity)
+
+      const activityResult = await loadActivities()
+
+      if (isMounted) {
+        setBookings(result.bookings)
+        setIsUsingBookingFallback(result.isUsingFallback)
+        setIsLoadingBookings(false)
+        setActivityItems(activityResult.activities)
+        setIsUsingActivityFallback(activityResult.isUsingFallback)
+        setIsLoadingActivities(false)
+      }
+    }
+
+    void refreshBookings()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -174,29 +204,11 @@ export function Dashboard() {
       ? todayActiveBookings[todayActiveIndex % todayActiveBookings.length]
       : undefined
 
-  const completedActivityItems: DashboardActivity[] = completedBookings.map(
-    (booking) => ({
-      id: `completed-${booking.id}`,
-      action: 'completed',
-      resourceId: booking.resourceId,
-      date: booking.date,
-      startTime: booking.startTime,
-      endTime: booking.endTime,
-      createdAt: new Date(
-        getCampusDateTimeTimestamp(booking.date, booking.endTime),
-      ).toISOString(),
-    }),
+  const recentActivities = [...activityItems].sort(
+    (firstActivity, secondActivity) =>
+      getActivityTimestamp(secondActivity) -
+      getActivityTimestamp(firstActivity),
   )
-
-  const recentActivities: DashboardActivity[] = [
-    ...activityItems,
-    ...completedActivityItems,
-  ]
-    .sort(
-      (firstActivity, secondActivity) =>
-        getActivityTimestamp(secondActivity) -
-        getActivityTimestamp(firstActivity),
-    )
 
   const totalActivityPages = Math.ceil(
     recentActivities.length / itemsPerActivityPage,
@@ -357,6 +369,24 @@ export function Dashboard() {
         </div>
       </section>
 
+      {isLoadingDashboard ? (
+        <p className={'rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300'}>
+          Refreshing dashboard data...
+        </p>
+      ) : null}
+
+      {!isLoadingBookings && isUsingBookingFallback ? (
+        <p className={'rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300'}>
+          Using cached bookings because the backend is unavailable.
+        </p>
+      ) : null}
+
+      {!isLoadingActivities && isUsingActivityFallback ? (
+        <p className={'rounded-lg border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300'}>
+          Using cached activity while activity history is unavailable.
+        </p>
+      ) : null}
+
       <section className="space-y-4">
         <div>
           <p className="text-sm font-medium uppercase tracking-wide text-blue-700 dark:text-blue-400">
@@ -413,11 +443,11 @@ export function Dashboard() {
               }}
             >
               {paginatedActivities.map((activity) => {
-                const styles = activityStyles[activity.action]
+                const styles = activityStyles[activity.type]
 
                 return (
                   <article
-                    key={`${activity.action}-${activity.id}`}
+                    key={`${activity.type}-${activity.id}`}
                     className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 transition-colors duration-300 ease-in-out sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-950"
                   >
                     <div className="flex items-start gap-3">

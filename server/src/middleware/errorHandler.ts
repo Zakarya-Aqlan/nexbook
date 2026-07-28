@@ -12,18 +12,24 @@ export class AppError extends Error {
 }
 
 export function errorHandler(
-  error: Error,
+  error: unknown,
   _request: Request,
   response: Response,
   _next: NextFunction,
 ) {
-  const statusCode = error instanceof AppError ? error.statusCode : 500
-  const details = error instanceof AppError ? error.details : undefined
+  const isAppError = error instanceof AppError
+  const statusCode = isAppError ? error.statusCode : 500
+  const details = isAppError ? error.details : undefined
+
+  if (!isAppError) {
+    console.error('Unhandled server error:', error)
+  }
 
   response.status(statusCode).json({
     error: {
-      message:
-        statusCode === 500 ? 'Something went wrong on the server.' : error.message,
+      message: isAppError
+        ? error.message
+        : 'Something went wrong on the server.',
       ...(details ? { details } : {}),
     },
   })

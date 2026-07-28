@@ -15,6 +15,13 @@ enum BookingStatus {
   completed
 }
 
+enum ActivityType {
+  booked
+  updated
+  cancelled
+  completed
+}
+
 model Resource {
   id          String    @id @default(cuid())
   name        String
@@ -47,4 +54,22 @@ model Booking {
   @@index([resourceId, date])
   @@index([studentId])
   @@index([status])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  type           ActivityType
+  bookingId      String
+  resourceId     String
+  resourceName   String
+  date           String
+  startTime      String
+  endTime        String
+  studentId      String?
+  createdAt      DateTime     @default(now())
+  dedupeKey      String?      @unique
+  clientEventKey String?      @unique
+
+  @@index([createdAt])
+  @@index([bookingId])
 }

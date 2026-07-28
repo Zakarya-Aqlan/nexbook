@@ -114,6 +114,12 @@ function upsertBooking(bookingToSave: Booking) {
   saveBookings(updatedBookings)
 }
 
+export function mirrorBooking(booking: Booking) {
+  upsertBooking(booking)
+
+  return booking
+}
+
 export function addBooking(booking: Booking) {
   const bookings = getBookings()
   saveBookings([...bookings, booking])

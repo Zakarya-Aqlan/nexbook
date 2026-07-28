@@ -28,9 +28,11 @@ export async function createBooking(
   next: NextFunction,
 ) {
   try {
-    const booking = await createBookingWithValidation(request.body)
+    const { booking, activity } = await createBookingWithValidation(
+      request.body,
+    )
 
-    response.status(201).json({ data: booking })
+    response.status(201).json({ data: booking, activity })
   } catch (error) {
     next(error)
   }
@@ -43,12 +45,12 @@ export async function updateBookingById(
 ) {
   try {
     const bookingId = getRouteId(request)
-    const booking = await updateBookingWithValidation(
+    const { booking, activity } = await updateBookingWithValidation(
       bookingId,
       request.body,
     )
 
-    response.json({ data: booking })
+    response.json({ data: booking, activity })
   } catch (error) {
     next(error)
   }
@@ -61,9 +63,9 @@ export async function cancelBookingById(
 ) {
   try {
     const bookingId = getRouteId(request)
-    const booking = await cancelBooking(bookingId)
+    const { booking, activity } = await cancelBooking(bookingId)
 
-    response.json({ data: booking })
+    response.json({ data: booking, activity })
   } catch (error) {
     next(error)
   }

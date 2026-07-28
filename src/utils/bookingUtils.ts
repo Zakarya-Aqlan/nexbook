@@ -1,5 +1,28 @@
 import type { Booking, Resource } from '../types'
-import { getTodayDate } from './dateUtils'
+import { getCampusBookingLifecycle, getTodayDate } from './dateUtils'
+
+export type BookingGroup = 'Active' | 'Upcoming' | 'Cancelled' | 'Completed'
+
+export function getBookingGroup(
+  booking: Booking,
+  now: Date = new Date(),
+): BookingGroup {
+  if (booking.status === 'cancelled') {
+    return 'Cancelled'
+  }
+
+  const lifecycle = getCampusBookingLifecycle(booking, now)
+
+  if (lifecycle === 'completed') {
+    return 'Completed'
+  }
+
+  if (lifecycle === 'active') {
+    return 'Active'
+  }
+
+  return 'Upcoming'
+}
 
 function timeToMinutes(time: string) {
   const [hours, minutes] = time.split(':').map(Number)
