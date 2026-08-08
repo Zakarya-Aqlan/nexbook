@@ -1,5 +1,6 @@
-import { ActivityType, BookingStatus, PrismaClient } from '@prisma/client'
+import { ActivityType, BookingStatus } from '@prisma/client'
 
+import { prisma } from '../lib/prisma'
 import { AppError } from '../middleware/errorHandler'
 import {
   createBookingActivity,
@@ -18,7 +19,6 @@ import {
   getCampusDateKey,
 } from '../utils/campusTime'
 
-const prisma = new PrismaClient()
 const activeBookingStatuses: BookingStatus[] = [
   BookingStatus.upcoming,
   BookingStatus.active,
