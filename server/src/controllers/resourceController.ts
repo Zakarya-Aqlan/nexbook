@@ -1,9 +1,7 @@
-import { PrismaClient } from '@prisma/client'
 import type { NextFunction, Request, Response } from 'express'
 
+import { prisma } from '../lib/prisma'
 import { AppError } from '../middleware/errorHandler'
-
-const prisma = new PrismaClient()
 
 export async function getResources(
   _request: Request,

@@ -1,60 +1,38 @@
-import cors, { type CorsOptions } from 'cors'
-import dotenv from 'dotenv'
-import express from 'express'
+import app from './app'
+import { prisma } from './lib/prisma'
 
-import { AppError, errorHandler } from './middleware/errorHandler'
-import { activityRoutes } from './routes/activityRoutes'
-import { bookingRoutes } from './routes/bookingRoutes'
-import { resourceRoutes } from './routes/resourceRoutes'
-
-dotenv.config()
-
-const app = express()
 const port = Number(process.env.PORT) || 4000
-const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
-  .split(',')
-  .map(normalizeOrigin)
-  .filter(Boolean)
-const corsOptions: CorsOptions =
-  allowedOrigins.length === 0
-    ? {}
-    : {
-        origin(origin, callback) {
-          const normalizedRequestOrigin = origin
-            ? normalizeOrigin(origin)
-            : ''
-
-          callback(
-            null,
-            !origin || allowedOrigins.includes(normalizedRequestOrigin),
-          )
-        },
-      }
-
-app.use(cors(corsOptions))
-app.use(express.json())
-
-app.get('/api/health', (_request, response) => {
-  response.json({
-    status: 'ok',
-    service: 'nexbook-api',
-  })
-})
-
-app.use('/api/resources', resourceRoutes)
-app.use('/api/bookings', bookingRoutes)
-app.use('/api/activities', activityRoutes)
-
-app.use((_request, _response, next) => {
-  next(new AppError(404, 'Route not found'))
-})
-
-app.use(errorHandler)
-
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`NexBook API is running on http://localhost:${port}`)
 })
 
-function normalizeOrigin(origin: string) {
-  return origin.trim().replace(/\/+$/, '')
+let isShuttingDown = false
+
+async function shutdown(signal: NodeJS.Signals) {
+  if (isShuttingDown) {
+    return
+  }
+
+  isShuttingDown = true
+  console.log(`Received ${signal}. Shutting down NexBook API.`)
+
+  server.close(async (error) => {
+    let exitCode = error ? 1 : 0
+
+    if (error) {
+      console.error('Failed to close the HTTP server:', error)
+    }
+
+    try {
+      await prisma.$disconnect()
+    } catch (disconnectError) {
+      console.error('Failed to disconnect Prisma:', disconnectError)
+      exitCode = 1
+    }
+
+    process.exit(exitCode)
+  })
 }
+
+process.once('SIGINT', () => void shutdown('SIGINT'))
+process.once('SIGTERM', () => void shutdown('SIGTERM'))

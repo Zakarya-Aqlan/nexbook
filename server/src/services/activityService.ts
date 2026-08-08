@@ -2,16 +2,15 @@ import {
   ActivityType,
   BookingStatus,
   Prisma,
-  PrismaClient,
 } from '@prisma/client'
 
+import { prisma } from '../lib/prisma'
 import { AppError } from '../middleware/errorHandler'
 import {
   getCampusBookingLifecycle,
   getCampusDateTimeInstant,
 } from '../utils/campusTime'
 
-const prisma = new PrismaClient()
 const maximumImportSize = 200
 
 type ActivityBookingSnapshot = {
