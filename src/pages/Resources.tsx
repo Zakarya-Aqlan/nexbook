@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ResourceCard } from '../components/ResourceCard'
 import { resources as mockResources } from '../data/resources'
+import { buildApiUrl } from '../services/apiConfig'
 import type { Resource, ResourceType } from '../types'
 
 type ResourceFilter = 'all' | ResourceType
@@ -33,9 +34,6 @@ const resourceSubtitles = [
   'Move from browsing to booking without wasting time.',
   'Find the resource for your next campus task.',
 ]
-
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 
 function isResourceType(value: unknown): value is ResourceType {
   return (
@@ -134,9 +132,7 @@ export function Resources() {
 
     async function loadResources() {
       try {
-        const response = await fetch(
-          `${apiBaseUrl.replace(/\/$/, '')}/api/resources`,
-        )
+        const response = await fetch(buildApiUrl('/api/resources'))
 
         if (!response.ok) {
           throw new Error('Resources request failed.')

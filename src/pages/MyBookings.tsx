@@ -7,7 +7,7 @@ import { ResourceSelect } from '../components/ResourceSelect'
 import { FinalEditWarningModal } from '../components/FinalEditWarningModal'
 import { resources } from '../data/resources'
 import { mapApiActivity } from '../services/activityApi'
-import { getApiUrl } from '../services/apiConfig'
+import { buildApiUrl } from '../services/apiConfig'
 import {
   loadBookings as loadBookingsFromApi,
   mapApiBooking,
@@ -114,7 +114,7 @@ async function requestBooking(
   let response: Response
 
   try {
-    response = await fetch(getApiUrl(path), request)
+    response = await fetch(buildApiUrl(path), request)
   } catch {
     throw new Error(unavailableMessage)
   }

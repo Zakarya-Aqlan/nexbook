@@ -5,7 +5,7 @@ import {
   markBookingSources,
   saveBookings,
 } from '../utils/storage'
-import { getApiUrl } from './apiConfig'
+import { buildApiUrl } from './apiConfig'
 
 export type BookingLoadResult = {
   bookings: Booking[]
@@ -76,7 +76,7 @@ export async function loadBookings(): Promise<BookingLoadResult> {
   const cachedBookings = getBookings()
 
   try {
-    const response = await fetch(getApiUrl('/api/bookings'))
+    const response = await fetch(buildApiUrl('/api/bookings'))
 
     if (!response.ok) {
       throw new Error('Bookings request failed.')
