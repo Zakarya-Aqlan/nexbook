@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { resources } from '../data/resources'
 import { mapApiActivity } from '../services/activityApi'
-import { getApiUrl } from '../services/apiConfig'
+import { buildApiUrl } from '../services/apiConfig'
 import type { Activity, Booking } from '../types'
 import { mirrorActivity } from '../utils/activityStorage'
 import {
@@ -213,7 +213,7 @@ async function createBookingWithApi(
   let response: Response
 
   try {
-    response = await fetch(getApiUrl('/api/bookings'), {
+    response = await fetch(buildApiUrl('/api/bookings'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

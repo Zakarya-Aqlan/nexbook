@@ -3,7 +3,7 @@ import {
   getActivityItems,
   saveActivityItems,
 } from '../utils/activityStorage'
-import { getApiUrl } from './apiConfig'
+import { buildApiUrl } from './apiConfig'
 
 type ActivityLoadResult = {
   activities: Activity[]
@@ -73,7 +73,7 @@ export async function loadActivities(): Promise<ActivityLoadResult> {
           index,
           index + maximumImportSize,
         )
-        const response = await fetch(getApiUrl('/api/activities/import'), {
+        const response = await fetch(buildApiUrl('/api/activities/import'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export async function loadActivities(): Promise<ActivityLoadResult> {
   }
 
   try {
-    const response = await fetch(getApiUrl('/api/activities'))
+    const response = await fetch(buildApiUrl('/api/activities'))
 
     if (!response.ok) {
       throw new Error('Activities request failed.')

@@ -1,4 +1,4 @@
-import cors from 'cors'
+import cors, { type CorsOptions } from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 
@@ -11,8 +11,27 @@ dotenv.config()
 
 const app = express()
 const port = Number(process.env.PORT) || 4000
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map(normalizeOrigin)
+  .filter(Boolean)
+const corsOptions: CorsOptions =
+  allowedOrigins.length === 0
+    ? {}
+    : {
+        origin(origin, callback) {
+          const normalizedRequestOrigin = origin
+            ? normalizeOrigin(origin)
+            : ''
 
-app.use(cors())
+          callback(
+            null,
+            !origin || allowedOrigins.includes(normalizedRequestOrigin),
+          )
+        },
+      }
+
+app.use(cors(corsOptions))
 app.use(express.json())
 
 app.get('/api/health', (_request, response) => {
@@ -35,3 +54,7 @@ app.use(errorHandler)
 app.listen(port, () => {
   console.log(`NexBook API is running on http://localhost:${port}`)
 })
+
+function normalizeOrigin(origin: string) {
+  return origin.trim().replace(/\/+$/, '')
+}
